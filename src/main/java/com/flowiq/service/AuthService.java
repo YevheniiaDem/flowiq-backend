@@ -30,12 +30,13 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String email = request.getEmail().toLowerCase().trim();
+        if (userRepository.existsByEmail(email)) {
             throw new BadRequestException("Email is already registered");
         }
 
         User user = new User();
-        user.setEmail(request.getEmail().toLowerCase().trim());
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName().trim());
         user.setCompany(request.getCompany());

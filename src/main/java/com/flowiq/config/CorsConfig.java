@@ -39,6 +39,8 @@ public class CorsConfig {
             "Content-Type",
             "Accept",
             "X-Requested-With",
+            "X-App-Language",
+            "X-App-Currency",
             "Origin"
         ));
         
