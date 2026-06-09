@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -17,46 +18,77 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionSeedService {
 
+    private static final BigDecimal[] MONTHLY_REVENUE_TARGETS = {
+            new BigDecimal("150000"),
+            new BigDecimal("165000"),
+            new BigDecimal("178000"),
+            new BigDecimal("190000"),
+            new BigDecimal("204300"),
+            new BigDecimal("245400"),
+    };
+
     private final TransactionRepository transactionRepository;
 
     @Transactional
     public void seedIfEmpty(User user) {
         if (transactionRepository.existsByUserId(user.getId())) {
+            ensureSixMonthHistory(user);
             return;
         }
 
-        YearMonth currentMonth = YearMonth.now();
-        YearMonth previousMonth = currentMonth.minusMonths(1);
-
+        YearMonth current = YearMonth.now();
         List<Transaction> transactions = new ArrayList<>();
 
-        // Current month - revenue ~245,400
-        addRevenue(transactions, user, currentMonth, "Online Sales", new BigDecimal("145000"), 1);
-        addRevenue(transactions, user, currentMonth, "Subscriptions", new BigDecimal("58000"), 5);
-        addRevenue(transactions, user, currentMonth, "Consulting", new BigDecimal("28400"), 10);
-        addRevenue(transactions, user, currentMonth, "Partnerships", new BigDecimal("14000"), 15);
-
-        // Current month - expenses ~152,600
-        addExpense(transactions, user, currentMonth, "Salaries", new BigDecimal("62000"), 1);
-        addExpense(transactions, user, currentMonth, "Marketing", new BigDecimal("45000"), 3);
-        addExpense(transactions, user, currentMonth, "Infrastructure", new BigDecimal("18000"), 7);
-        addExpense(transactions, user, currentMonth, "Operations", new BigDecimal("15600"), 12);
-        addExpense(transactions, user, currentMonth, "Other", new BigDecimal("12000"), 20);
-
-        // Previous month - revenue ~204,300 (for +20.1% growth)
-        addRevenue(transactions, user, previousMonth, "Online Sales", new BigDecimal("120000"), 2);
-        addRevenue(transactions, user, previousMonth, "Subscriptions", new BigDecimal("48300"), 8);
-        addRevenue(transactions, user, previousMonth, "Consulting", new BigDecimal("24000"), 14);
-        addRevenue(transactions, user, previousMonth, "Partnerships", new BigDecimal("12000"), 18);
-
-        // Previous month - expenses ~161,000 (for -5.2% change)
-        addExpense(transactions, user, previousMonth, "Salaries", new BigDecimal("62000"), 2);
-        addExpense(transactions, user, previousMonth, "Marketing", new BigDecimal("36000"), 5);
-        addExpense(transactions, user, previousMonth, "Infrastructure", new BigDecimal("21000"), 10);
-        addExpense(transactions, user, previousMonth, "Operations", new BigDecimal("16000"), 15);
-        addExpense(transactions, user, previousMonth, "Other", new BigDecimal("26000"), 22);
+        for (int i = 5; i >= 0; i--) {
+            YearMonth month = current.minusMonths(i);
+            int targetIndex = 5 - i;
+            addMonthTransactions(transactions, user, month, MONTHLY_REVENUE_TARGETS[targetIndex]);
+        }
 
         transactionRepository.saveAll(transactions);
+    }
+
+    @Transactional
+    public void ensureSixMonthHistory(User user) {
+        YearMonth current = YearMonth.now();
+        List<Transaction> toSave = new ArrayList<>();
+
+        for (int i = 5; i >= 0; i--) {
+            YearMonth month = current.minusMonths(i);
+            int targetIndex = 5 - i;
+            BigDecimal revenue = transactionRepository.sumByUserAndTypeAndDateRange(
+                    user.getId(), Transaction.Type.REVENUE,
+                    month.atDay(1), month.atEndOfMonth());
+
+            if (revenue.compareTo(BigDecimal.ZERO) == 0) {
+                addMonthTransactions(toSave, user, month, MONTHLY_REVENUE_TARGETS[targetIndex]);
+            }
+        }
+
+        if (!toSave.isEmpty()) {
+            transactionRepository.saveAll(toSave);
+        }
+    }
+
+    private void addMonthTransactions(List<Transaction> list, User user, YearMonth month,
+                                      BigDecimal revenueTarget) {
+        BigDecimal expenseTarget = revenueTarget.multiply(new BigDecimal("0.62"))
+                .setScale(0, RoundingMode.HALF_UP);
+
+        addRevenue(list, user, month, "Online Sales", scale(revenueTarget, "0.59"), 1);
+        addRevenue(list, user, month, "Subscriptions", scale(revenueTarget, "0.24"), 5);
+        addRevenue(list, user, month, "Consulting", scale(revenueTarget, "0.12"), 10);
+        addRevenue(list, user, month, "Partnerships", scale(revenueTarget, "0.05"), 15);
+
+        addExpense(list, user, month, "Salaries", scale(expenseTarget, "0.41"), 1);
+        addExpense(list, user, month, "Marketing", scale(expenseTarget, "0.29"), 3);
+        addExpense(list, user, month, "Infrastructure", scale(expenseTarget, "0.12"), 7);
+        addExpense(list, user, month, "Operations", scale(expenseTarget, "0.10"), 12);
+        addExpense(list, user, month, "Other", scale(expenseTarget, "0.08"), 20);
+    }
+
+    private BigDecimal scale(BigDecimal base, String ratio) {
+        return base.multiply(new BigDecimal(ratio)).setScale(0, RoundingMode.HALF_UP);
     }
 
     private void addRevenue(List<Transaction> list, User user, YearMonth month,

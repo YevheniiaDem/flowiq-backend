@@ -41,6 +41,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("end") LocalDate end
     );
 
+    @Query("""
+        SELECT t.category AS category, COALESCE(SUM(t.amount), 0) AS amount
+        FROM Transaction t
+        WHERE t.user.id = :userId AND t.type = com.flowiq.entity.Transaction$Type.REVENUE
+        AND t.transactionDate BETWEEN :start AND :end
+        GROUP BY t.category
+        ORDER BY SUM(t.amount) DESC
+        """)
+    List<CategorySumProjection> sumRevenueByCategory(
+            @Param("userId") Long userId,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );
+
     interface CategorySumProjection {
         String getCategory();
         BigDecimal getAmount();
