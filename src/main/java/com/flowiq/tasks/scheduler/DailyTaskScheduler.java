@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class TaskScheduler {
+public class DailyTaskScheduler {
 
     private final UserRepository userRepository;
     private final TaskRuleEngine taskRuleEngine;
