@@ -11,6 +11,8 @@ import com.flowiq.dto.response.StatCardResponse;
 import com.flowiq.forecasts.dto.ForecastSnapshotResponse;
 import com.flowiq.forecasts.service.ForecastService;
 import com.flowiq.service.DashboardService;
+import com.flowiq.knowledge.dto.KnowledgeDashboardSnapshotDto;
+import com.flowiq.knowledge.service.KnowledgeService;
 import com.flowiq.tasks.dto.TaskSnapshotResponse;
 import com.flowiq.tasks.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +40,7 @@ public class DashboardController {
     private final DashboardService dashboardService;
     private final ForecastService forecastService;
     private final TaskService taskService;
+    private final KnowledgeService knowledgeService;
 
     @Operation(summary = "Dashboard stat cards", description = "Returns key financial stat cards for the dashboard overview.")
     @ApiResponse(responseCode = "200", description = "List of stat cards",
@@ -109,5 +112,14 @@ public class DashboardController {
     @GetMapping("/tasks-snapshot")
     public ResponseEntity<TaskSnapshotResponse> getTasksSnapshot() {
         return ResponseEntity.ok(taskService.getSnapshot());
+    }
+
+    @Operation(summary = "Business Guide snapshot", description = "Returns popular, recent, and recommended knowledge articles for the dashboard widget.")
+    @ApiResponse(responseCode = "200", description = "Business Guide snapshot",
+            content = @Content(schema = @Schema(implementation = KnowledgeDashboardSnapshotDto.class)))
+    @ApiErrorResponses
+    @GetMapping("/business-guide-snapshot")
+    public ResponseEntity<KnowledgeDashboardSnapshotDto> getBusinessGuideSnapshot() {
+        return ResponseEntity.ok(knowledgeService.getDashboardSnapshot());
     }
 }
