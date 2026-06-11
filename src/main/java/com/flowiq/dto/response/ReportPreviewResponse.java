@@ -1,5 +1,6 @@
 package com.flowiq.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Report preview data before generation")
 public class ReportPreviewResponse {
 
     private BigDecimal revenue;

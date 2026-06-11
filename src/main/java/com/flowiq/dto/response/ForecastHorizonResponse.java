@@ -1,5 +1,7 @@
 package com.flowiq.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +13,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Forecast for a specific time horizon")
 public class ForecastHorizonResponse {
 
     private int months;

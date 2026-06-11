@@ -20,6 +20,7 @@ import com.flowiq.repository.TransactionRepository;
 import com.flowiq.repository.UserRepository;
 import com.flowiq.security.UserPrincipal;
 import com.flowiq.notifications.service.NotificationGeneratorService;
+import com.flowiq.tasks.service.TaskGeneratorService;
 import com.flowiq.util.TransactionDateValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,6 +45,7 @@ public class ImportService {
     private final CsvImportStrategyResolver strategyResolver;
     private final CategorizationEngine categorizationEngine;
     private final NotificationGeneratorService notificationGeneratorService;
+    private final TaskGeneratorService taskGeneratorService;
 
     @Transactional(readOnly = true)
     public ImportListResponse getImports() {
@@ -174,6 +176,7 @@ public class ImportService {
 
         if (imported > 0) {
             notificationGeneratorService.notifyImportCompleted(user.getId(), job.getId(), imported);
+            taskGeneratorService.createImportReviewTask(user.getId(), job.getId(), imported);
         }
     }
 

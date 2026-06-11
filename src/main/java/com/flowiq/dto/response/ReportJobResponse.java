@@ -1,6 +1,7 @@
 package com.flowiq.dto.response;
 
 import com.flowiq.entity.ReportJob;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "ReportResponse", description = "Generated report job details")
 public class ReportJobResponse {
 
     private Long id;

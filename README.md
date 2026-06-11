@@ -21,7 +21,11 @@ Spring Boot backend для Flowiq - AI-powered платформи для упр�
 
 ### Database
 - PostgreSQL Driver
+- Flyway (schema migrations)
 - Docker Compose Support
+
+### API Documentation
+- springdoc-openapi (Swagger UI + OpenAPI 3)
 
 ### Development
 - Spring Boot DevTools (Hot reload)
@@ -133,6 +137,105 @@ docker-compose up -d
 - CORS configuration
 - Role-based access control (ADMIN, USER, VIEWER)
 - Request validation
+
+## API Documentation
+
+Interactive API documentation is available via Swagger UI (springdoc-openapi).
+
+### Open Swagger UI
+
+Start the application, then open:
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **Alternative URL:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **OpenAPI JSON:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+API groups:
+
+| Group | Endpoints |
+|-------|-----------|
+| **Public APIs** | `/api/health`, `/api/auth/register`, `/api/auth/login` |
+| **Protected APIs** | `/api/dashboard`, `/api/analytics`, `/api/transactions`, `/api/imports`, `/api/reports`, `/api/ai-accountant`, `/api/notifications` |
+
+Group-specific OpenAPI JSON:
+
+- Public: `http://localhost:8080/v3/api-docs/public`
+- Protected: `http://localhost:8080/v3/api-docs/protected`
+
+### Use JWT token in Swagger
+
+1. Call **POST /api/auth/login** or **POST /api/auth/register** (no auth required).
+2. Copy the `token` value from the response.
+3. Click the **Authorize** button (lock icon) at the top of Swagger UI.
+4. Enter: `Bearer <your-token>` or just paste the token (Swagger adds the `Bearer` prefix automatically).
+5. Click **Authorize**, then **Close**.
+6. All protected endpoints will now include the JWT in requests.
+
+### Test endpoints
+
+1. Expand any endpoint in Swagger UI.
+2. Click **Try it out**.
+3. Fill in parameters or request body.
+4. Click **Execute** and inspect the response.
+
+For file upload endpoints (e.g. CSV import), use the file picker in the request form.
+
+## Database Migrations
+
+Schema changes are managed with [Flyway](https://flywaydb.org/). Hibernate is configured with `ddl-auto=validate` and does not modify the database at runtime.
+
+Migration files live in `src/main/resources/db/migration/` and follow the naming pattern `V{version}__{description}.sql` (for example, `V3__add_notifications_table.sql`).
+
+### Add a new migration
+
+1. Create the next versioned SQL file in `src/main/resources/db/migration/`.
+2. Use a descriptive name after the double underscore, for example `V3__add_column_to_users.sql`.
+3. Write idempotent-safe DDL only in that file (one logical change per migration).
+4. Start the application or run Flyway manually — pending migrations are applied automatically on startup.
+
+### Run migrations
+
+Migrations run automatically when the application starts and PostgreSQL is available:
+
+```bash
+docker-compose up -d
+./mvnw spring-boot:run
+```
+
+To apply migrations without starting the full app (requires a running database):
+
+```bash
+./mvnw flyway:migrate
+```
+
+Add the Flyway Maven plugin to `pom.xml` if you want to use CLI migration commands regularly.
+
+### Check Flyway state
+
+**From application logs** — on startup you should see lines such as:
+
+```
+Flyway Community Edition ...
+Successfully applied N migration(s)
+```
+
+**From PostgreSQL** — inspect the history table:
+
+```sql
+SELECT installed_rank, version, description, type, script, success, installed_on
+FROM flyway_schema_history
+ORDER BY installed_rank;
+```
+
+**Reset local database** (development only):
+
+```bash
+docker-compose down -v
+docker-compose up -d
+./mvnw spring-boot:run
+```
+
+If you migrate an existing database that was previously managed by Hibernate `ddl-auto=update`, either reset the volume or baseline Flyway before the first run (see [Flyway baseline](https://documentation.red-gate.com/fd/baseline-version-184127456.html)).
 
 ## 🧪 Testing
 

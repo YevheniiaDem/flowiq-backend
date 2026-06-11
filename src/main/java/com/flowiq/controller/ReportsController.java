@@ -1,10 +1,19 @@
 package com.flowiq.controller;
 
+import com.flowiq.config.OpenApiConfig;
+import com.flowiq.config.openapi.ApiErrorResponses;
 import com.flowiq.dto.request.GenerateReportRequest;
 import com.flowiq.dto.response.ReportJobResponse;
 import com.flowiq.dto.response.ReportListResponse;
 import com.flowiq.dto.response.ReportPreviewResponse;
 import com.flowiq.service.ReportsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -23,23 +32,36 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 
+@Tag(name = "Reports", description = "Financial report generation, preview, and download")
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public class ReportsController {
 
     private final ReportsService reportsService;
 
+    @Operation(summary = "List reports", description = "Returns all generated reports for the authenticated user.")
+    @ApiResponse(responseCode = "200", description = "Report list",
+            content = @Content(schema = @Schema(implementation = ReportListResponse.class)))
+    @ApiErrorResponses
     @GetMapping
     public ResponseEntity<ReportListResponse> getReports() {
         return ResponseEntity.ok(reportsService.getReports());
     }
 
+    @Operation(
+            summary = "Report preview",
+            description = "Returns a preview of report data for a given period. Use periodPreset (THIS_MONTH, LAST_MONTH, QUARTER, YEAR) or custom dateFrom/dateTo."
+    )
+    @ApiResponse(responseCode = "200", description = "Report preview data",
+            content = @Content(schema = @Schema(implementation = ReportPreviewResponse.class)))
+    @ApiErrorResponses
     @GetMapping("/preview")
     public ResponseEntity<ReportPreviewResponse> getPreview(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
-            @RequestParam(required = false) String periodPreset
+            @Parameter(description = "Start date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @Parameter(description = "End date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @Parameter(description = "Period preset: THIS_MONTH, LAST_MONTH, QUARTER, YEAR") @RequestParam(required = false) String periodPreset
     ) {
         if (periodPreset != null && !periodPreset.isBlank()) {
             var range = resolvePreviewRange(periodPreset, dateFrom, dateTo);
@@ -48,18 +70,30 @@ public class ReportsController {
         return ResponseEntity.ok(reportsService.getPreview(dateFrom, dateTo));
     }
 
+    @Operation(summary = "Generate report", description = "Generates a new financial report in PDF, CSV, or Excel format.")
+    @ApiResponse(responseCode = "201", description = "Report generation started",
+            content = @Content(schema = @Schema(implementation = ReportJobResponse.class)))
+    @ApiErrorResponses
     @PostMapping("/generate")
     public ResponseEntity<ReportJobResponse> generate(@Valid @RequestBody GenerateReportRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(reportsService.generate(request));
     }
 
+    @Operation(summary = "Get report by ID", description = "Returns metadata and status of a generated report.")
+    @ApiResponse(responseCode = "200", description = "Report job details",
+            content = @Content(schema = @Schema(implementation = ReportJobResponse.class)))
+    @ApiErrorResponses
     @GetMapping("/{id}")
-    public ResponseEntity<ReportJobResponse> getById(@PathVariable Long id) {
+    public ResponseEntity<ReportJobResponse> getById(@Parameter(description = "Report job ID") @PathVariable Long id) {
         return ResponseEntity.ok(reportsService.getById(id));
     }
 
+    @Operation(summary = "Download report", description = "Downloads the generated report file (PDF, CSV, or Excel).")
+    @ApiResponse(responseCode = "200", description = "Report file download",
+            content = @Content(mediaType = "application/octet-stream", schema = @Schema(type = "string", format = "binary")))
+    @ApiErrorResponses
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Long id) {
+    public ResponseEntity<Resource> download(@Parameter(description = "Report job ID") @PathVariable Long id) {
         Resource resource = reportsService.download(id);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(reportsService.getDownloadContentType(id)))

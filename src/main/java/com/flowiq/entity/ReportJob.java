@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,8 +49,7 @@ public class ReportJob {
     @Column(name = "period_to", nullable = false)
     private LocalDate periodTo;
 
-    @Lob
-    @Basic(fetch = FetchType.LAZY)
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     @Column(name = "file_content")
     private byte[] fileContent;
 

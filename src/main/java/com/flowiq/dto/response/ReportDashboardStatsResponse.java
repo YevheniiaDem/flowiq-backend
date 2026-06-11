@@ -1,5 +1,7 @@
 package com.flowiq.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Report dashboard statistics")
 public class ReportDashboardStatsResponse {
 
     private long generatedReports;

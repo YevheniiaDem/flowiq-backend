@@ -17,6 +17,9 @@ import java.util.Map;
 
 import com.flowiq.notifications.entity.NotificationSeverity;
 import com.flowiq.notifications.entity.NotificationType;
+import com.flowiq.tasks.entity.TaskPriority;
+import com.flowiq.tasks.entity.TaskType;
+import com.flowiq.tasks.service.TaskGeneratorService;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class NotificationRuleEngine {
     private static final List<Integer> TAX_REMINDER_DAYS = List.of(30, 14, 7, 3, 1);
 
     private final NotificationGeneratorService notificationGenerator;
+    private final TaskGeneratorService taskGenerator;
     private final TransactionRepository transactionRepository;
 
     public void generateForUser(User user) {
@@ -134,6 +138,17 @@ public class NotificationRuleEngine {
                     "/ai-accountant",
                     deadline.atTime(23, 59)
             );
+            taskGenerator.createFromNotification(
+                    userId,
+                    key,
+                    "Нагадування про податок",
+                    message,
+                    TaskType.TAX,
+                    severity == NotificationSeverity.CRITICAL
+                            ? TaskPriority.CRITICAL
+                            : TaskPriority.HIGH,
+                    deadline
+            );
         }
     }
 
@@ -152,16 +167,21 @@ public class NotificationRuleEngine {
 
         if (increasePercent > 20) {
             String key = "expense-spike-" + current;
+            String msg = String.format(Locale.forLanguageTag("uk-UA"),
+                    "Витрати виросли на %.0f%% порівняно із середнім значенням", increasePercent);
             notificationGenerator.createIfAbsent(
                     userId,
                     key,
                     "Зростання витрат",
-                    String.format(Locale.forLanguageTag("uk-UA"),
-                            "Витрати виросли на %.0f%% порівняно із середнім значенням", increasePercent),
+                    msg,
                     NotificationType.FINANCIAL,
                     NotificationSeverity.WARNING,
                     "/analytics",
                     current.atEndOfMonth().atTime(23, 59)
+            );
+            taskGenerator.createFromNotification(
+                    userId, key, "Переглянути зростання витрат", msg,
+                    TaskType.BUSINESS, TaskPriority.HIGH, current.atEndOfMonth()
             );
         }
     }

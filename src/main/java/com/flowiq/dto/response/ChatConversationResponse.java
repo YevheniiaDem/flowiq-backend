@@ -1,5 +1,7 @@
 package com.flowiq.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.flowiq.entity.ChatConversation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Chat conversation with messages")
 public class ChatConversationResponse {
 
     private String id;

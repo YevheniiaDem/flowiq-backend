@@ -1,5 +1,7 @@
 package com.flowiq.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.flowiq.entity.ChatMessage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Chat message")
 public class ChatMessageResponse {
 
     private String id;

@@ -19,6 +19,7 @@ import com.flowiq.reports.ReportData;
 import com.flowiq.reports.ReportFileGenerator;
 import com.flowiq.security.UserPrincipal;
 import com.flowiq.notifications.service.NotificationGeneratorService;
+import com.flowiq.tasks.service.TaskGeneratorService;
 import com.flowiq.dto.response.FopInsightsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
@@ -45,6 +46,7 @@ public class ReportsService {
     private final AnalyticsService analyticsService;
     private final ReportFileGenerator reportFileGenerator;
     private final NotificationGeneratorService notificationGeneratorService;
+    private final TaskGeneratorService taskGeneratorService;
 
     @Transactional(readOnly = true)
     public ReportListResponse getReports() {
@@ -123,6 +125,7 @@ public class ReportsService {
         ReportJob saved = reportJobRepository.save(job);
         if (saved.getStatus() == ReportJob.Status.COMPLETED) {
             notificationGeneratorService.notifyReportCompleted(user.getId(), saved.getId(), saved.getFileName());
+            taskGeneratorService.createReportReviewTask(user.getId(), saved.getId(), saved.getFileName());
         }
 
         return ReportJobResponse.fromEntity(saved);
