@@ -20,6 +20,7 @@ public class CorsConfig {
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",      // Next.js dev server
             "http://localhost:3001",      // Alternative port
+            "http://flowiq-frontend:3000", // Docker Compose internal network
             "https://flowiq.vercel.app"   // Production frontend (if deployed)
         ));
         
