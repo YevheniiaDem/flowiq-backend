@@ -125,7 +125,15 @@ docker-compose up -d
 - `POST /api/chat/message` - AI chat
 - `GET /api/forecasts/revenue` - Revenue forecast
 
-### Integrations
+### Imports (bank statements)
+- `POST /api/imports/upload` - Upload bank CSV/XLSX statement
+- `GET /api/imports` - List import jobs
+- `GET /api/imports/{id}` - Get import job details
+
+### Bank Integrations (planned — not implemented)
+
+See [Bank Integrations Roadmap](docs/roadmap/BANK_INTEGRATIONS_ROADMAP.md). Endpoints below are **future** only:
+
 - `GET /api/integrations` - List integrations
 - `POST /api/integrations/{provider}/connect` - Connect integration
 - `POST /api/integrations/{provider}/sync` - Sync data
@@ -256,7 +264,7 @@ If you migrate an existing database that was previously managed by Hibernate `dd
 - `categories` - Transaction categories
 - `insights` - AI-generated insights
 - `forecasts` - AI predictions
-- `integrations` - Third-party integrations
+- `integrations` - Third-party integrations (**planned**, see `docs/roadmap/BANK_INTEGRATIONS_ROADMAP.md`)
 - `chat_conversations` - AI chat history
 - `chat_messages` - Chat messages
 

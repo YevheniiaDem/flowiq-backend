@@ -6,7 +6,7 @@ FlowIQ is a **financial intelligence platform** for Ukrainian individual entrepr
 
 The product combines:
 
-- **Transaction ledger** with CSV bank import
+- **Transaction ledger** with CSV bank statement import (primary data source)
 - **Dashboard** with AI-style business insights
 - **Forecast Center 2.0** — revenue, expenses, profit, tax, and FOP limit projections
 - **Tasks & Deadlines Center** — auto-generated compliance tasks

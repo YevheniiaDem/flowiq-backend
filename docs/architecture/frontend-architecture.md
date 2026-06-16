@@ -81,7 +81,7 @@ Custom implementation (no next-intl):
 | Tax profile card | `mock-data/tax-profile.localized.ts` |
 | Business Guide groups/taxes (partial) | `features/business-guide/data/` |
 | FOP Eligibility Checker | Client-side `eligibility-engine.ts` |
-| Integrations | Stub service |
+| Integrations | Hidden — `/coming-soon/integrations` (planned) |
 
 ## Related Documents
 

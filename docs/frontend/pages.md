@@ -14,7 +14,8 @@
 | `/tasks` | `app/tasks/page.tsx` | `TasksView` | `/tasks/*` |
 | `/reports` | `app/reports/page.tsx` | `ReportsView` | `/reports/*` |
 | `/notifications` | `app/notifications/page.tsx` | `NotificationCenterView` | `/notifications` |
-| `/integrations` | `app/integrations/page.tsx` | `IntegrationsView` | stub |
+| `/coming-soon/integrations` | `app/coming-soon/integrations/page.tsx` | `IntegrationsComingSoonView` | none (hidden) |
+| `/integrations` | `app/integrations/page.tsx` | redirect → coming-soon | — |
 | `/business-guide` | `app/business-guide/page.tsx` | `BusinessGuideView` | knowledge API + local mock |
 | `/business-guide/articles/[slug]` | `app/business-guide/articles/[slug]/page.tsx` | `KnowledgeArticleView` | `/business-guide/articles/{slug}` |
 | `/business-guide/groups/[slug]` | `app/business-guide/groups/[slug]/page.tsx` | `GroupDetailView` | local mock |

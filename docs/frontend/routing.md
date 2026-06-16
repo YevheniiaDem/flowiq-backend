@@ -20,7 +20,9 @@ app/
 ├── tasks/page.tsx
 ├── reports/page.tsx
 ├── notifications/page.tsx
-├── integrations/page.tsx
+├── coming-soon/
+│   └── integrations/page.tsx   # Hidden — bank integrations planned
+├── integrations/page.tsx       # Redirects to coming-soon
 ├── settings/page.tsx
 └── business-guide/
     ├── page.tsx

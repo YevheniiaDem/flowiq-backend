@@ -39,7 +39,7 @@
 | AI Accountant | ✅ | ✅ | ⚠️ | — | **80%** |
 | Chat | ✅ | ✅ | ❌ | ✅ | **70%** |
 | Imports | ✅ | ✅ | ⚠️ | ✅ | **85%** |
-| Integrations | ❌ stub | stub UI | ❌ | ❌ | **20%** |
+| Integrations | ❌ planned | hidden coming-soon | ❌ | ❌ | **Planned** — see [Bank Integrations Roadmap](roadmap/BANK_INTEGRATIONS_ROADMAP.md) |
 | Settings | — | ✅ | — | — | **60%** |
 
 ## Undocumented / Partial Areas (TODO)
@@ -55,7 +55,7 @@
 ### Frontend
 - [ ] `taxProfileService` — still mock; document when API exists
 - [ ] `businessGuideService` partial mock (groups, taxes, KVED)
-- [ ] `integrationsService` stub
+- [ ] `integrationsService` — enable when `BANK_INTEGRATIONS_ENABLED` (Phase 2+)
 - [ ] `checkerService` — document as client-side engine (partial in business-guide module)
 - [ ] Next.js middleware for auth (not implemented)
 

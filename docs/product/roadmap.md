@@ -29,7 +29,7 @@ Roadmap derived from implemented features and documented extension points in the
 | LLM dashboard insights | `AIInsightProvider` | Used by `AIAccountantService` |
 | Refresh token flow | `JwtService.generateRefreshToken` | Frontend `refreshToken()` not implemented |
 | Tax profile API | `taxProfileService` | Frontend still uses mock |
-| Integrations API | `integrationsService` | Frontend stub |
+| Bank integrations API | `integrationsService` + `FeatureFlags` | **Planned** — UI hidden, see [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md) |
 | Email / Telegram notifications | `Notification.channel` | Enum exists; only IN_APP used |
 
 ## Medium Term
@@ -47,17 +47,33 @@ Roadmap derived from implemented features and documented extension points in the
 
 | Initiative | Vision |
 |------------|--------|
-| Bank API integrations | Beyond CSV import |
+| Bank API integrations | Beyond CSV import — see [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md) |
 | Government API (ДПС) | Declaration filing |
 | Marketplace for accountants | B2B2C channel |
 | Predictive FOP group migration | ML on income trends |
+
+## Future Roadmap — Bank Integrations
+
+**Status: Planned**
+
+Flowiq currently works through **imported bank statements** only. Direct bank connections are not available.
+
+| Planned Feature | Phase |
+|-----------------|-------|
+| Monobank Integration | Phase 2 |
+| PrivatBank Integration | Phase 3 |
+| Open Banking Support | Phase 5 |
+| Automatic Synchronization | Phase 2–4 |
+| Real-time Transaction Sync | Phase 5 |
+
+Full architecture: [docs/roadmap/BANK_INTEGRATIONS_ROADMAP.md](../roadmap/BANK_INTEGRATIONS_ROADMAP.md).
 
 ## TODO (Undocumented / Incomplete in Code)
 
 - [ ] `ChatController` OpenAPI annotations
 - [ ] Refresh token endpoint and rotation
 - [ ] Backend `/dashboard/tax-profile` endpoint
-- [ ] Integration connect/disconnect APIs
+- [ ] Bank integration connect/disconnect APIs (see [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md))
 - [ ] Automated test coverage
 - [ ] Production secrets management (Vault / env injection)
 
@@ -65,4 +81,5 @@ Roadmap derived from implemented features and documented extension points in the
 
 - [Vision](vision.md)
 - [Future LLM Integration](../ai/future-llm-integration.md)
+- [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md)
 - [Coverage Report](../COVERAGE-REPORT.md)

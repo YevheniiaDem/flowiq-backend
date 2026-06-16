@@ -20,6 +20,7 @@ Central business overview combining financial stats, AI insights, charts, and mo
 | Expense chart | `/charts/expense-breakdown` | `ExpenseBreakdownChart` |
 | Forecast snapshot | `/forecast-snapshot` | `ForecastSnapshotWidget` |
 | Tasks snapshot | `/tasks-snapshot` | `TasksDashboardWidget` |
+| Import activity | `/imports` | `ImportDashboardWidget` |
 | Business Guide | `/business-guide-snapshot` | `BusinessGuideDashboardWidget` |
 | Notifications | `/notifications` | `RecentNotificationsWidget` |
 

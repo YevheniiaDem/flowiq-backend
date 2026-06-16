@@ -1,17 +1,17 @@
 # Integration Architecture
 
-## Current Integrations
+## Current Data Source: Bank Statement Import
 
-### Bank CSV Import
+Flowiq does **not** connect to bank APIs. The only way to load bank transactions is **CSV/XLSX import** via the Imports module.
 
 ```mermaid
 flowchart LR
-    CSV[Bank CSV File] --> UP[POST /api/imports/upload]
+    CSV[Bank CSV/XLSX File] --> UP[POST /api/imports/upload]
     UP --> IS[ImportService]
     IS --> PARSER{Parser Strategy}
-    PARSER --> MONO[MonobankParser]
-    PARSER --> PRIV[PrivatBankParser]
-    PARSER --> UNI[UniversalParser]
+    PARSER --> MONO[MonobankCsvStrategy]
+    PARSER --> PRIV[PrivatBankCsvStrategy]
+    PARSER --> UNI[UniversalCsvStrategy]
     MONO --> CE[CategorizationEngine]
     CE --> TR[TransactionRepository]
     IS --> TGS[TaskGeneratorService]
@@ -20,9 +20,12 @@ flowchart LR
 
 **Package:** `com.flowiq.importcsv`  
 **Formats:** Monobank, PrivatBank, universal fallback  
-**Post-import:** Review task + completion notification
+**Post-import:** Review task + completion notification  
+**User action:** Import your bank statement (not “connect your bank”)
 
-### Reports Export
+All downstream modules (Analytics, Forecasts, AI Accountant, Reports, Dashboard) read from `transactions` populated by import or manual CRUD.
+
+## Reports Export
 
 | Format | Renderer | Library |
 |--------|----------|---------|
@@ -42,15 +45,30 @@ flowchart LR
 
 `CorsConfig`: `localhost:3000`, `localhost:3001`, `https://flowiq.vercel.app`
 
-## Planned / Stub Integrations
+## Planned: Bank API Integrations (Coming Soon)
+
+Bank integrations are **not active** in the UI. See [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md).
+
+| Feature | Status |
+|---------|--------|
+| Monobank API | Planned (Phase 2) |
+| PrivatBank API | Planned (Phase 3) |
+| Multi-bank aggregation | Planned (Phase 4) |
+| Open Banking | Planned (Phase 5) |
+| PUMB / Sense Bank | Not scoped |
+
+**Feature flags:** `flowiq.features.bank-integrations-enabled=false` (backend), `FEATURE_FLAGS.BANK_INTEGRATIONS_ENABLED=false` (frontend).
+
+Hidden route: `/coming-soon/integrations` — not listed in sidebar.
+
+## Other Planned Integrations
 
 | Integration | Frontend | Backend |
 |-------------|----------|---------|
-| Google Sheets | `IntegrationsView` | ❌ No API |
-| Shopify | UI card | ❌ |
-| Telegram notifications | UI card | `NotificationChannel.TELEGRAM` enum only |
+| Google Sheets | Stub (hidden) | ❌ No API |
+| Shopify | UI card (hidden) | ❌ |
+| Telegram notifications | UI card (hidden) | `NotificationChannel.TELEGRAM` enum only |
 | Email notifications | — | `NotificationChannel.EMAIL` enum only |
-| Bank API (open banking) | — | Roadmap |
 | ДПС (tax authority) | — | Roadmap |
 
 ## Notification Deep Links
@@ -59,6 +77,7 @@ flowchart LR
 
 | URL | Module |
 |-----|--------|
+| `/imports` | Import completed alerts |
 | `/business-guide` | FOP limit warnings |
 | `/ai-accountant` | Tax deadlines |
 | `/analytics` | Revenue/expense anomalies |
@@ -72,6 +91,7 @@ flowchart LR
 
 ## Related Documents
 
+- [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md)
 - [Transactions Module](../modules/transactions.md)
 - [Reports Module](../modules/reports.md)
 - [Docker](../deployment/docker.md)

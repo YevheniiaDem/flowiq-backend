@@ -4,6 +4,7 @@
 
 - [Vision](product/vision.md)
 - [Roadmap](product/roadmap.md)
+- [Bank Integrations Roadmap](roadmap/BANK_INTEGRATIONS_ROADMAP.md)
 - [User Personas](product/user-personas.md)
 - [Business Requirements](product/business-requirements.md)
 
