@@ -2,13 +2,14 @@
 
 ## Ready Extension Points
 
-| Use Case | Interface | Suggested Model Role |
-|----------|-----------|---------------------|
-| Forecast narratives | `ForecastProvider` | Analyze trends, explain risks |
-| Knowledge Q&A | `KnowledgeProvider` | RAG over `knowledge_articles` |
-| AI Accountant chat | `AIInsightProvider` | Tool-use with transaction data |
-| Transaction categories | `CategorizationProvider` | Classify unknown merchants |
-| Analytics commentary | `AnalyticsInsightProvider` | Period-over-period explanation |
+| Use Case | Interface | Consumer | Wired | Invoked today | Suggested Model Role |
+|----------|-----------|----------|-------|---------------|---------------------|
+| Forecast narratives | `ForecastProvider` | `ForecastService` | Yes | Yes (`RuleBasedForecastProvider`) | Analyze trends, explain risks |
+| Knowledge Q&A | `KnowledgeProvider` | `KnowledgeService` | Yes | Yes (`DatabaseKnowledgeProvider`) | RAG over `knowledge_articles` |
+| AI Accountant chat | `AIInsightProvider` | `AIAccountantService` | Yes | Loop only — **no beans** | Tool-use with transaction data |
+| Transaction categories | `CategorizationProvider` | `CategorizationEngine` | Yes | Loop only — **no beans** | Classify unknown merchants |
+| Analytics commentary | `AnalyticsInsightProvider` | `AnalyticsService` | Yes | **No** — field never read | Period-over-period explanation |
+| Transaction context | — | `TransactionInsightService` | Bean only | **No callers** | Build `TransactionAnalysisContext` for LLM |
 
 ## Recommended Architecture
 

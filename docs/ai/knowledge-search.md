@@ -3,7 +3,8 @@
 ## Smart Search
 
 **Endpoint:** `GET /api/business-guide/search`  
-**Service:** `KnowledgeService.search()`
+**Controller:** `src/main/java/com/flowiq/knowledge/controller/BusinessGuideController.java`  
+**Service:** `src/main/java/com/flowiq/knowledge/service/KnowledgeService.search()`
 
 ### Repository Layer
 
@@ -14,6 +15,8 @@ JPQL queries match against:
 - `summary_uk`, `summary_en`
 
 ### Scoring (`DatabaseKnowledgeProvider`)
+
+Implementation: `src/main/java/com/flowiq/knowledge/provider/DatabaseKnowledgeProvider.java`
 
 | Signal | Weight |
 |--------|--------|
