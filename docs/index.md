@@ -31,6 +31,7 @@
 - [ADR Defense Guide](architecture/ADR_DEFENSE_GUIDE.md)
 - [Architect Review Cheat Sheet](architecture/ARCHITECT_REVIEW_CHEAT_SHEET.md) — 15-min talk track
 - [Architect Interview Guide](architecture/ARCHITECT_INTERVIEW_GUIDE.md) — 56 Q&A for architecture review
+- [Architect Trap Questions](architecture/ARCHITECT_TRAP_QUESTIONS.md) — picky review traps + remediation
 - [Technical Debt Register](architecture/TECHNICAL_DEBT_REGISTER.md)
 - [ADR Coverage Report](architecture/adr/ADR_COVERAGE_REPORT.md)
 - [ADR-001: Pluggable AI Providers](architecture/adr/001-pluggable-ai-providers.md)

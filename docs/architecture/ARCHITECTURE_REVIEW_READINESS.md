@@ -393,6 +393,7 @@ Items **not obvious from docs alone** — architect may find in IDE / PR walkthr
 | System Component Catalog | [SYSTEM_COMPONENT_CATALOG.md](SYSTEM_COMPONENT_CATALOG.md) |
 | Request Flow Map | [REQUEST_FLOW_MAP.md](REQUEST_FLOW_MAP.md) |
 | Architect Interview Guide (56 Q) | [ARCHITECT_INTERVIEW_GUIDE.md](ARCHITECT_INTERVIEW_GUIDE.md) |
+| Architect Trap Questions | [ARCHITECT_TRAP_QUESTIONS.md](ARCHITECT_TRAP_QUESTIONS.md) |
 | Architect Cheat Sheet | [ARCHITECT_REVIEW_CHEAT_SHEET.md](ARCHITECT_REVIEW_CHEAT_SHEET.md) |
 | ADR Defense Guide | [ADR_DEFENSE_GUIDE.md](ADR_DEFENSE_GUIDE.md) |
 | Technical Debt Register | [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) |
