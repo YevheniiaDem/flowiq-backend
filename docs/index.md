@@ -18,6 +18,7 @@
 - [AI Agents Architecture](architecture/ai-agents-architecture.md)
 - [Architecture Review Readiness](architecture/ARCHITECTURE_REVIEW_READINESS.md)
 - [System Component Catalog](architecture/SYSTEM_COMPONENT_CATALOG.md) — full backend/frontend/DB inventory
+- [Request Flow Map](architecture/REQUEST_FLOW_MAP.md) — Controller → DB dependency chains
 - [Backend Architecture](architecture/backend-architecture.md)
 - [Frontend Architecture](architecture/frontend-architecture.md)
 - [Database Architecture](architecture/database-architecture.md)
