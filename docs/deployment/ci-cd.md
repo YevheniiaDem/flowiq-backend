@@ -14,6 +14,7 @@
 **CD is not implemented** — no automated deploy on merge.
 
 Full as-built documentation: [CI/CD As-Built](ci-cd-as-built.md)  
+Evolution roadmap: [CI/CD Evolution Plan](CI_CD_EVOLUTION_PLAN.md)  
 Readiness report: [CI Readiness Report](CI_READINESS_REPORT.md)
 
 ## Pipeline Diagram

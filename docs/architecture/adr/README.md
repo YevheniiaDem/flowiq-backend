@@ -88,6 +88,8 @@ flowchart TB
 
 ## Related
 
+- [ADR Defense Guide](../ADR_DEFENSE_GUIDE.md) — architect Q&A for all ADRs
+- [Architect Review Cheat Sheet](../ARCHITECT_REVIEW_CHEAT_SHEET.md) — 15-min presentation guide
 - [Architecture Review Readiness](../ARCHITECTURE_REVIEW_READINESS.md)
 - [ADR Coverage Report](ADR_COVERAGE_REPORT.md)
 - [Documentation Index](../../index.md)

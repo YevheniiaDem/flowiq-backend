@@ -26,6 +26,9 @@
 ## Architecture Decision Records (ADR)
 
 - [ADR Index & Dependency Diagram](architecture/adr/README.md)
+- [ADR Defense Guide](architecture/ADR_DEFENSE_GUIDE.md)
+- [Architect Review Cheat Sheet](architecture/ARCHITECT_REVIEW_CHEAT_SHEET.md) — 15-min talk track
+- [Technical Debt Register](architecture/TECHNICAL_DEBT_REGISTER.md)
 - [ADR Coverage Report](architecture/adr/ADR_COVERAGE_REPORT.md)
 - [ADR-001: Pluggable AI Providers](architecture/adr/001-pluggable-ai-providers.md)
 - [ADR-002: Transaction Seed Strategy](architecture/adr/002-transaction-seed-strategy.md)
@@ -104,6 +107,7 @@
 - [Environments](deployment/environments.md)
 - [CI/CD Overview](deployment/ci-cd.md)
 - [CI/CD As-Built](deployment/ci-cd-as-built.md)
+- [CI/CD Evolution Plan](deployment/CI_CD_EVOLUTION_PLAN.md)
 - [CI Readiness Report](deployment/CI_READINESS_REPORT.md)
 - [Production Deployment](deployment/production-deployment.md)
 - [Monitoring](operations/monitoring.md)

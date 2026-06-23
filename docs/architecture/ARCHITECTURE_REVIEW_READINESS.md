@@ -213,6 +213,8 @@ Scoring model: 0–100 per dimension, weighted for architect review readiness.
 | AI Quality Factory | [ai-quality-factory.md](ai-quality-factory.md) |
 | AI Agents | [ai-agents-architecture.md](ai-agents-architecture.md) |
 | AI Documentation Audit | [AI_DOCUMENTATION_AUDIT_REPORT.md](AI_DOCUMENTATION_AUDIT_REPORT.md) |
+| Architect Review Cheat Sheet | [ARCHITECT_REVIEW_CHEAT_SHEET.md](ARCHITECT_REVIEW_CHEAT_SHEET.md) |
+| Technical Debt Register | [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) |
 | ADR Index | [adr/README.md](adr/README.md) |
 | ADR Coverage | [adr/ADR_COVERAGE_REPORT.md](adr/ADR_COVERAGE_REPORT.md) |
 | Full docs index | [../index.md](../index.md) |

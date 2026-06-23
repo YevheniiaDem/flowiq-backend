@@ -172,6 +172,7 @@ See [Production Deployment](production-deployment.md) for target architecture.
 ## Related
 
 - [CI/CD Overview](ci-cd.md)
+- [CI/CD Evolution Plan](CI_CD_EVOLUTION_PLAN.md)
 - [CI Readiness Report](CI_READINESS_REPORT.md)
 - [Docker](docker.md)
 - [Test Strategy](../qa/test-strategy.md)
