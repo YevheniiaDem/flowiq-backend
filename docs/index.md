@@ -17,6 +17,7 @@
 - [AI Quality Factory](architecture/ai-quality-factory.md)
 - [AI Agents Architecture](architecture/ai-agents-architecture.md)
 - [Architecture Review Readiness](architecture/ARCHITECTURE_REVIEW_READINESS.md)
+- [System Component Catalog](architecture/SYSTEM_COMPONENT_CATALOG.md) — full backend/frontend/DB inventory
 - [Backend Architecture](architecture/backend-architecture.md)
 - [Frontend Architecture](architecture/frontend-architecture.md)
 - [Database Architecture](architecture/database-architecture.md)
@@ -28,6 +29,7 @@
 - [ADR Index & Dependency Diagram](architecture/adr/README.md)
 - [ADR Defense Guide](architecture/ADR_DEFENSE_GUIDE.md)
 - [Architect Review Cheat Sheet](architecture/ARCHITECT_REVIEW_CHEAT_SHEET.md) — 15-min talk track
+- [Architect Interview Guide](architecture/ARCHITECT_INTERVIEW_GUIDE.md) — 56 Q&A for architecture review
 - [Technical Debt Register](architecture/TECHNICAL_DEBT_REGISTER.md)
 - [ADR Coverage Report](architecture/adr/ADR_COVERAGE_REPORT.md)
 - [ADR-001: Pluggable AI Providers](architecture/adr/001-pluggable-ai-providers.md)

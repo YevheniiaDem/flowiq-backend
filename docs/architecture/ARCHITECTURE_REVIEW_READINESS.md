@@ -1,225 +1,406 @@
 # Architecture Review Readiness Report
 
-**Audit date:** 2026-06-23  
-**Scope:** `flowiq-backend`, `flowiq-frontend` (code + `flowiq-backend/docs/`)  
-**Method:** Full codebase trace; documentation aligned to as-built state only  
+**Final audit date:** 2026-06-23  
+**Scope:** `flowiq-backend`, `flowiq-frontend` (code) + `flowiq-backend/docs/`  
+**Method:** Full documentation cross-check against code; workflows, migrations, security, AI call-graph trace  
 **Audience:** Senior Architect review  
-**Latest AI audit:** [AI_DOCUMENTATION_AUDIT_REPORT.md](AI_DOCUMENTATION_AUDIT_REPORT.md)
+**Prior audits:** 2026-06-17 (C4/ADR), 2026-06-23 (AI, debt, CI/CD, component catalog, interview guide)
 
 ---
 
 ## Executive Summary
 
-FlowIQ is a **functional MVP** — Spring Boot backend with PostgreSQL, Next.js frontend, JWT auth, and a **rule-based intelligence layer**. The platform is suitable for architectural review with clear caveats: demo data seeding, hybrid frontend mocks, no CI/CD, no external LLM/bank APIs, and several cross-cutting gaps (audit log, settings backend).
+FlowIQ is a **demonstrable MVP** suitable for **architectural review sessions** with explicit caveats. Documentation is **substantially aligned** with as-built code (C4, ADRs, AI audit, CI as-built, component catalog, 56-question interview guide). **Production sign-off** remains blocked by data-integrity, security, and operational gaps in [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md).
 
-This audit **created C4 diagrams, data-source truth table, and AI layer as-built docs**, and **corrected stale documentation** that contradicted the codebase.
+| Score | Value | Meaning |
+|-------|-------|---------|
+| **Architecture Documentation Health** | **86 / 100** | Documentation package is strong; minor staleness and missing L3 C4 |
+| **Architecture Review Readiness** | **71 / 100** | MVP is explainable and demo-ready; production trust & ops maturity insufficient |
+
+**Verdict:** Proceed with architect review **for MVP architecture, decisions, and roadmap** — not for production go-live approval without a remediation plan.
 
 ---
 
-## What Was Found (As-Built)
+## Final Audit — Documentation Areas
 
-### Platform
+### Summary matrix
+
+| Area | Docs reviewed | Alignment with code | Gaps / staleness |
+|------|---------------|---------------------|------------------|
+| **Architecture hub** | `system-overview.md`, C4 L1–L2, `SYSTEM_COMPONENT_CATALOG.md`, cheat sheet, interview guide | **High** | C4 Component (L3) missing; `system-overview.md` production/Docker line **fixed** in this audit |
+| **ADR** | ADR-001–008, `ADR_COVERAGE_REPORT.md`, `ADR_DEFENSE_GUIDE.md` | **High** | ~72% decision coverage; ADR-009+ not written |
+| **AI** | `ai-quality-factory.md`, `ai-agents-architecture.md`, `docs/ai/*`, `AI_DOCUMENTATION_AUDIT_REPORT.md` | **Very high** | Rule-based only; dead/unused beans documented |
+| **CI/CD** | `ci-cd.md`, `ci-cd-as-built.md`, `CI_CD_EVOLUTION_PLAN.md`, `CI_READINESS_REPORT.md` | **High** | CI ✅ both repos; CD ❌; no Flyway/Testcontainers/Docker in CI |
+| **Deployment** | `docker.md`, `production-deployment.md`, `environments.md`, `local-setup.md` | **High** | Checklists accurate; staging TBD; no automated deploy |
+| **Security** | `authentication.md`, `jwt-flow.md`, `authorization.md`, `data-protection.md` | **High** | Gaps documented (refresh, localStorage, no `@PreAuthorize`) |
+| **Database** | `database-architecture.md`, `migrations.md`, `schema-overview.md`, `relationships.md` | **High** | FK gaps on notifications/import/report jobs in catalog |
+
+### Architecture documents (verified)
+
+| Document | Status |
+|----------|--------|
+| [c4/c4-context.md](c4/c4-context.md) | ✅ User, FlowIQ, PostgreSQL, CSV; Bank/LLM external (planned) |
+| [c4/c4-container.md](c4/c4-container.md) | ✅ Frontend, Backend, DB, schedulers |
+| [data-sources.md](data-sources.md) | ✅ Per-module real vs seed vs mock |
+| [SYSTEM_COMPONENT_CATALOG.md](SYSTEM_COMPONENT_CATALOG.md) | ✅ 13 controllers, 9 tables, production flags |
+| [ARCHITECT_INTERVIEW_GUIDE.md](ARCHITECT_INTERVIEW_GUIDE.md) | ✅ 56 Q&A code-verified |
+| [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) | ✅ 48 items (6 Critical) |
+
+### ADR (verified)
+
+| ADR | Code anchor | Match |
+|-----|-------------|-------|
+| 001 Pluggable AI | `AIInsightProvider`, `RuleBasedForecastProvider` | ✅ |
+| 002 Transaction seed | `TransactionSeedService.seedIfEmpty()` | ✅ (risk: all environments) |
+| 003 AI quality factory | Distributed services, no orchestrator | ✅ |
+| 004 PostgreSQL | `compose.yaml`, `application.properties` | ✅ |
+| 005 Flyway | V1–V5, `ddl-auto=validate` | ✅ |
+| 006 JWT | `JwtService`, `JwtAuthenticationFilter` | ✅ refresh endpoint gap |
+| 007 Layered | Controller → Service → Repository | ✅ |
+| 008 Frontend | `app/`, `src/features/`, `api.ts` | ✅ |
+
+**Undocumented (ADR-009+ candidates):** FOP/tax constants strategy, audit log absence, frontend mock hybrid, monolith deployment, refresh-token lifecycle, scheduler scale-out.
+
+### AI documents (verified)
+
+| Claim in docs | Code truth |
+|---------------|------------|
+| Production AI = rule-based | ✅ No LLM SDK in `pom.xml` |
+| `TransactionInsightService` unused | ✅ Zero callers |
+| `AnalyticsInsightProvider` unused | ✅ Injected, never invoked |
+| `AIAccountantService.getForecasts()` ≠ `ForecastEngine` | ✅ Inline `buildForecast()` |
+| `DashboardService.getInsights()` inline rules | ✅ |
+| Frontend has no AI engines | ✅ HTTP clients only |
+
+### CI/CD documents (verified)
+
+| Claim | Code truth |
+|-------|------------|
+| Backend CI on push/PR `main` | ✅ `.github/workflows/backend-ci.yml` |
+| `mvnw clean verify`, Java 17 | ✅ |
+| `SPRING_DOCKER_COMPOSE_ENABLED=false` in CI | ✅ |
+| JaCoCo artifact upload | ✅ |
+| Frontend lint + build | ✅ `flowiq-frontend/.github/workflows/frontend-ci.yml` |
+| CD / deploy on merge | ❌ |
+| ~95 unit tests in CI | ✅ Surefire `*Test.java` only; `FlowiqBackendApplicationTests` excluded |
+
+### Deployment documents (verified)
+
+| Claim | Code truth |
+|-------|------------|
+| `compose.yaml` = PostgreSQL only | ✅ |
+| Backend `Dockerfile` multi-stage JRE 17 | ✅ Healthcheck `GET /api/health` |
+| Production checklist (secrets, CORS, show-sql) | ✅ Matches risks in `application.properties` |
+
+### Security documents (verified)
+
+| Claim | Code truth |
+|-------|------------|
+| Stateless JWT, BCrypt | ✅ |
+| Public: health, register, login, Swagger | ✅ |
+| Filter accepts access tokens only | ✅ `isAccessToken()` |
+| Refresh issued, no `/auth/refresh` | ✅ |
+| Roles ADMIN/USER/VIEWER | ✅ `User.Role` — not enforced per endpoint |
+| Token in `localStorage` | ✅ |
+
+### Database documents (verified)
+
+| Claim | Code truth |
+|-------|------------|
+| 9 tables, Flyway V1–V5 | ✅ |
+| `validate` + Flyway enabled | ✅ |
+| `report_jobs.file_content` BYTEA | ✅ |
+| Partial unique dedup indexes | ✅ V3, V4 |
+| V5 seeds knowledge articles | ✅ |
+
+### Remaining documentation staleness
+
+| Item | Severity |
+|------|----------|
+| `test-strategy.md` — test count ~88+ vs **95** in CI | Low |
+| `COVERAGE-REPORT.md` — file list predates 2026-06-23 artifacts | Low |
+| Dedicated API md for Transactions/Imports/Reports/Analytics/Chat | Medium |
+| C4 Component diagram | Medium |
+| Formal ADR for audit-log **absence** | Medium |
+
+---
+
+## Platform As-Built (Code)
 
 | Area | Finding |
 |------|---------|
-| **Backend** | Spring Boot 3.5, Java 17, 15+ REST controllers, Flyway V1–V5, JWT auth implemented |
-| **Frontend** | Next.js 16, React 19 — most modules call real API; Business Guide profile/taxes/KVED and tax profile card use static mock data |
-| **Database** | PostgreSQL 15 — `users`, `transactions`, `tasks`, `notifications`, `knowledge_articles`, `import_jobs`, `report_jobs`, `chat_*` |
-| **CI/CD** | Not implemented — no GitHub Actions / GitLab CI |
-| **Docker** | Dockerfiles exist in **both** repos; `compose.yaml` is PostgreSQL-only |
-| **Tests** | Backend: 9 test classes (unit + PDF/Excel renderers), JaCoCo; Frontend: none |
-| **External APIs** | None — no bank HTTP clients, no LLM SDKs |
-
-### Intelligence Layer
-
-| Expected (design names) | Actual in code |
-|------------------------|----------------|
-| `AiQualityFactory` | **Absent** — Spring DI + `List<Provider>` injection |
-| `*Orchestrator` classes | **Absent** — domain services (`AIAccountantService`, `ForecastService`, etc.) |
-| `*Agent.java` classes | **Absent** — 11 intelligence units as `@Component` rule engines |
-| LLM providers | **Interfaces only** — `AIInsightProvider`, `ForecastProvider`, etc.; `AnalyticsInsightProvider` injected but never called; `TransactionInsightService` has no callers |
-
-### Data Integrity Risks for Review
-
-1. **`TransactionSeedService`** — auto-seeds 6 months of demo transactions into PostgreSQL on first access to dashboard/analytics/forecasts/reports/AI Accountant/chat/tasks. Metrics appear populated without real user data.
-2. **Hardcoded FOP/tax constants** — duplicated across `AnalyticsService`, `ForecastService`, `NotificationRuleEngine`, `TaskRuleEngine` (not externalized).
-3. **Frontend mock split** — Business Guide articles = API/DB; groups/taxes/KVED/checker = local static files.
-
-### Documentation Gaps (Before Audit)
-
-| Issue | Severity |
-|-------|----------|
-| No C4 diagrams | High |
-| No single data-sources document | High |
-| `README.md` stated JWT/PostgreSQL/API as "planned" | High |
-| `docker.md` stated "No Dockerfile" | Medium |
-| `test-strategy.md` stated "zero tests" | Medium |
-| `COVERAGE-REPORT.md` listed missing Dockerfile, zero tests | Medium |
-| AI Factory docs referenced non-existent classes | High (if written aspirational) |
+| **Backend** | Spring Boot 3.5.14, Java 17, **13** REST controllers, Flyway V1–V5, JWT |
+| **Frontend** | Next.js 16, React 19 — API-backed core; Business Guide / tax / integrations partially mocked |
+| **Database** | PostgreSQL 15 — 9 business tables |
+| **CI** | GitHub Actions both repos; **CD not implemented** |
+| **Tests** | Backend 9 `*Test.java` classes, **95** methods; Frontend **none** in CI |
+| **External APIs** | None — no bank clients, no LLM SDKs |
+| **Monitoring** | `/api/health` only — no Actuator |
 
 ---
 
-## What Was Fixed / Created
+# Architecture Documentation Health Score
 
-### New Documents
-
-| File | Purpose |
-|------|---------|
-| [c4/c4-context.md](c4/c4-context.md) | C4 Level 1 — User, FlowIQ, PostgreSQL, CSV, planned Bank/AI |
-| [c4/c4-container.md](c4/c4-container.md) | C4 Level 2 — Frontend, Backend, DB, Scheduler/AI/Reporting/Import layers |
-| [data-sources.md](data-sources.md) | Single source of truth for all module data origins |
-| [ai-quality-factory.md](ai-quality-factory.md) | Intelligence layer as-built; maps conceptual 3-level model to real classes |
-| [ai-agents-architecture.md](ai-agents-architecture.md) | All 11 intelligence units — inputs, outputs, use cases |
-| **This report** | Review readiness summary + health score |
-
-### Corrected Documents
-
-| File | Change |
-|------|--------|
-| `README.md` | Reflects implemented JWT, PostgreSQL, Flyway, all MVP endpoints, unit tests, Dockerfiles |
-| `docs/deployment/docker.md` | Documents existing Dockerfiles (backend + frontend); removed "No Dockerfile" |
-| `docs/qa/test-strategy.md` | Documents 9 backend test classes; clarifies no frontend/integration/E2E tests |
-| `docs/COVERAGE-REPORT.md` | Dockerfiles ✅, unit tests ✅, architecture docs count updated |
-| `docs/index.md` | Links to all new architecture documents |
-
----
-
-## Remaining Gaps (Post-Audit)
-
-### Architecture & Documentation
-
-| Gap | Priority | Notes |
-|-----|----------|-------|
-| C4 Component diagram (Level 3) | Medium | Package-level diagram for backend modules not created |
-| ADR-009: FOP/tax constants externalization | Medium | See [ADR Coverage Report](adr/ADR_COVERAGE_REPORT.md) |
-| `system-overview.md` sync | Low | May still reference pre-audit assumptions — verify on next pass |
-| Dedicated API docs for Transactions/Imports/Reports/Analytics/Chat | Medium | Module docs only |
-| Audit Log | High | 0% — no entity, table, API, or UI |
-| User Settings backend | High | Frontend-only; no persistence API |
-| CI/CD as-built doc vs implementation | Medium | `ci-cd.md` correctly states "not configured" |
-
-### Code / Platform (Out of Scope for This Audit)
-
-| Gap | Priority |
-|-----|----------|
-| CI/CD pipelines | High |
-| Integration tests (Testcontainers) | High |
-| Frontend tests (Vitest/Playwright) | Medium |
-| LLM provider implementation | Planned |
-| Bank API integrations | Planned (feature flag off) |
-| Email/Telegram notification delivery | Medium |
-| Role-based authorization enforcement | Medium |
-| Full-stack docker-compose | Low |
-
----
-
-## Recommendations for Senior Architect Review
-
-### Session 1 — System Context (30 min)
-
-1. Walk through [C4 Context](c4/c4-context.md) and [C4 Containers](c4/c4-container.md).
-2. Confirm boundaries: what is in MVP vs planned (banks, LLM).
-3. Discuss **TransactionSeedService** — is DB-backed demo acceptable for production onboarding?
-
-### Session 2 — Data & Trust (45 min)
-
-1. Review [Data Sources](data-sources.md) module matrix.
-2. Decide policy: **real data vs demo data** labeling in UI/API responses.
-3. Review hardcoded FOP/tax constants — centralize vs config service.
-
-### Session 3 — Intelligence Layer (45 min)
-
-1. Review [AI Quality Factory](ai-quality-factory.md) and [AI Agents Architecture](ai-agents-architecture.md).
-2. Confirm rule-based approach is acceptable until LLM providers ship (ADR-001).
-3. Discuss dual health scoring (`DashboardService` vs `AIAccountantService`).
-
-### Session 4 — Gaps & Roadmap (30 min)
-
-1. Prioritize: Audit Log, Settings backend, CI/CD — see [ADR Index](adr/README.md).
-2. Bank integrations phased rollout per [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md).
-3. Security: JWT in prod, role enforcement, data isolation between users.
-
-### Questions to Prepare Answers For
-
-| Question | Current Answer |
-|----------|----------------|
-| Is AI real or mock? | **Rule-based** — deterministic thresholds; no LLM calls |
-| Where does transaction data come from? | User CRUD, CSV import, or **auto-seed** if empty |
-| Multi-tenancy? | Single-user rows (`user_id` FK); no `companies` table |
-| How are FOP limits updated? | **Hardcoded** in Java — manual code change required |
-| Production deployment? | Frontend likely Vercel; backend TBD; no automated pipeline |
-
----
-
-## Architecture Documentation Health Score
-
-Scoring model: 0–100 per dimension, weighted for architect review readiness.
+**Measures:** completeness and **accuracy** of the documentation set.
 
 | Dimension | Weight | Score | Rationale |
 |-----------|--------|-------|-----------|
-| **C4 / structural diagrams** | 20% | **85** | Context + Container created; Component level missing |
-| **Data source transparency** | 20% | **90** | `data-sources.md` covers all 11 modules + seed service |
-| **AI layer documentation** | 15% | **92** | Code-verified audit 2026-06-23; component registry + discrepancy fixes |
-| **Accuracy (docs ↔ code)** | 20% | **88** | AI docs corrected; module docs may still lag |
-| **ADR / decisions** | 10% | **78** | ADR-001–008 documented; tax constants, RBAC, CI/CD gaps remain |
-| **Operational readiness docs** | 10% | **70** | Docker accurate; CI/CD correctly marked absent |
-| **Cross-cutting features** | 5% | **40** | Audit log, settings, RBAC gaps documented but not solved |
-
-### Calculation
+| C4 / structural diagrams | 14% | **84** | Context + Container ✅; Component (L3) ❌ |
+| Data & component transparency | 16% | **93** | `data-sources.md` + `SYSTEM_COMPONENT_CATALOG.md` |
+| AI layer documentation | 12% | **95** | AI audit + aligned `docs/ai/*` |
+| Accuracy (docs ↔ code) | 18% | **87** | Minor count/staleness; system-overview fixed |
+| ADR / decision traceability | 10% | **82** | 8 ADRs + defense guide; ~28% decisions undocumented |
+| CI/CD & deployment docs | 12% | **83** | As-built CI accurate; CD/monitoring mostly planned |
+| Review artifacts | 10% | **94** | Interview guide, cheat sheet, debt register, catalog |
+| Cross-cutting feature docs | 8% | **52** | Audit/settings gaps documented, not ADR-closed |
 
 ```
-(85×0.20) + (90×0.20) + (92×0.15) + (88×0.20) + (78×0.10) + (70×0.10) + (40×0.05)
-= 17.0 + 18.0 + 13.8 + 17.6 + 7.8 + 7.0 + 2.0
-= 83.2 → 83/100
+(84×0.14) + (93×0.16) + (95×0.12) + (87×0.18) + (82×0.10) + (83×0.12) + (94×0.10) + (52×0.08)
+= 85.4 → 86/100
 ```
 
-## Final Score
+## Architecture Documentation Health Score: **86 / 100** (Grade B+)
 
-# Architecture Documentation Health Score: **83 / 100**
-
-| Grade | Range | Status |
-|-------|-------|--------|
-| A | 90–100 | Production-grade architecture docs |
-| B | 75–89 | **← Current: Ready for review with known gaps** |
-| C | 60–74 | Partial — major gaps block confident review |
-| D | <60 | Not ready |
-
-### Score Trajectory
-
-| Date | Score | Delta | Driver |
-|------|-------|-------|--------|
-| Pre-audit (2026-06-11) | **62** | — | No C4, stale README/docker/tests, no data-sources |
-| Post-audit (2026-06-17) | **79** | **+17** | C4, data-sources, AI as-built docs, contradiction fixes |
-| Post-ADR (2026-06-17) | **81** | **+2** | ADR-002–008, ADR Coverage Report |
-| Post-AI audit (2026-06-23) | **83** | **+2** | [AI_DOCUMENTATION_AUDIT_REPORT.md](AI_DOCUMENTATION_AUDIT_REPORT.md) |
-
-### To Reach 90+ (Grade A)
-
-1. Add C4 Component diagram for backend packages.
-2. Write ADR-009 (FOP/tax constants) and ADR-017 (authorization model).
-3. Sync `system-overview.md` and module docs with `data-sources.md`.
-4. Document Audit Log and Settings as explicit "not implemented" architecture decisions.
-5. Add CI/CD as-built workflow doc when pipeline is implemented.
+| Grade | Range |
+|-------|-------|
+| **A** | 90–100 |
+| **B** | 75–89 ← **current** |
+| **C** | 60–74 |
+| **D** | <60 |
 
 ---
 
-## Document Index (Architecture Hub)
+# Architecture Review Readiness Score
+
+**Measures:** holistic readiness for architect review — MVP + defensibility + production risk (not docs alone).
+
+| Dimension | Weight | Score | Rationale |
+|-----------|--------|-------|-----------|
+| MVP functional completeness | 12% | **88** | 11 domain modules with UI + API |
+| Documentation package | 18% | **86** | Aligned with code; review artifacts complete |
+| Security posture | 14% | **58** | Dev secrets, localStorage JWT, incomplete refresh |
+| Data integrity & trust | 14% | **52** | Auto-seed, no `transactions.source` |
+| Test evidence | 9% | **64** | 95 unit tests; no integration/E2E/FE tests |
+| CI/CD & release | 9% | **60** | CI only; no staging/CD/Docker in pipeline |
+| Observability & ops | 5% | **38** | No Actuator, no structured ops runbook as-built |
+| ADR / governance | 9% | **78** | Core stack decided; production gaps not ADR-closed |
+| Explainability (Q&A readiness) | 10% | **92** | Interview guide, cheat sheet, ADR defense |
+
+```
+(88×0.12) + (86×0.18) + (58×0.14) + (52×0.14) + (64×0.09) + (60×0.09) + (38×0.05) + (78×0.09) + (92×0.10)
+= 70.7 → 71/100
+```
+
+## Architecture Review Readiness Score: **71 / 100** (Grade C+ / MVP-ready)
+
+Interpretation: **Ready to present and defend architecture**; **not ready** for production launch sign-off.
+
+---
+
+## Score Trajectory
+
+| Date | Doc Health | Review Readiness | Driver |
+|------|------------|------------------|--------|
+| 2026-06-11 (pre-audit) | **62** | **~55** | Stale README, no C4, no data-sources |
+| 2026-06-17 | **79** | **~65** | C4, data-sources, AI as-built, ADR-002–008 |
+| 2026-06-23 (AI audit) | **83** | **~68** | AI doc corrections |
+| **2026-06-23 (final)** | **86** | **71** | Catalog, interview guide, debt register, CI verification |
+
+---
+
+## Remaining Risks (Prioritized)
+
+### Critical (block production trust)
+
+| ID | Risk | Evidence |
+|----|------|----------|
+| R1 | **Synthetic transaction seed** indistinguishable from real data | `TransactionSeedService` — TD-C01, TD-C04 |
+| R2 | **No audit log** for financial / tax / AI actions | No table V1–V5 — TD-C02 |
+| R3 | **Secrets in default config** (`jwt.secret`, DB password, `show-sql=true`) | `application.properties` — TD-C03 |
+| R4 | **Hardcoded FOP/tax constants** across 4+ services | TD-C05 — inconsistent law updates |
+| R5 | **Incomplete JWT lifecycle** (refresh unused, no revocation) | TD-C06 |
+
+### High (review will challenge)
+
+| ID | Risk | Evidence |
+|----|------|----------|
+| R6 | Demo user `demo@flowiq.ai` / `demo123` seeded on startup | `DemoUserSeedService` |
+| R7 | JWT in `localStorage` (XSS surface) | `api.ts`, `auth.service.ts` |
+| R8 | RBAC roles exist but **not enforced** | `SecurityConfig`, no `@PreAuthorize` |
+| R9 | **Dual forecast paths** may diverge | `ForecastEngine` vs `AIAccountantService.buildForecast()` |
+| R10 | **Dead AI hooks** look like unfinished features | `TransactionInsightService`, unused providers |
+| R11 | Schedulers run on **every instance** (no leader election) | `DailyTaskScheduler`, `NotificationScheduler` |
+| R12 | Reports stored as **BYTEA** in PostgreSQL | `report_jobs` — backup/scale risk |
+| R13 | **No integration/E2E tests**; Flyway not validated against PG in CI | workflows, `pom.xml` |
+| R14 | **Frontend mock hybrid** — user may think all Business Guide data is authoritative | `business-guide.service.ts` |
+
+### Medium
+
+| ID | Risk |
+|----|------|
+| R15 | Missing FK on `notifications`, `import_jobs`, `report_jobs` → `users` |
+| R16 | CORS allowlist hardcoded — new prod origin needs code change |
+| R17 | `JwtAuthenticationFilter` swallows parse errors silently |
+| R18 | Settings / preferences not persisted server-side |
+| R19 | Bank integrations flag off; UI partially mock |
+| R20 | EMAIL/TELEGRAM notification channels enum-only |
+
+---
+
+## Possible Architect Questions
+
+Full bank: **[ARCHITECT_INTERVIEW_GUIDE.md](ARCHITECT_INTERVIEW_GUIDE.md)** (56 questions).  
+Defense depth: **[ADR_DEFENSE_GUIDE.md](ADR_DEFENSE_GUIDE.md)**.
+
+### Top 20 likely questions
+
+| # | Question | Short answer |
+|---|----------|--------------|
+| 1 | Is AI real or LLM? | **Rule-based only** — no LLM SDK |
+| 2 | Where does dashboard data come from? | User data, CSV, or **auto-seed** if empty |
+| 3 | Can users tell demo from real transactions? | **No** — no `source` column |
+| 4 | Multi-tenancy model? | Row-level `user_id`; single DB |
+| 5 | How are FOP limits updated? | **Hardcoded Java** — manual deploy |
+| 6 | Refresh token flow? | Issued; **`/auth/refresh` missing** |
+| 7 | Token storage? | **localStorage** |
+| 8 | Role-based access? | Roles in JWT; **not enforced** on endpoints |
+| 9 | CI/CD today? | **CI yes** (both repos); **CD no** |
+| 10 | Test strategy? | 95 backend unit tests; no FE/E2E |
+| 11 | Schema migrations? | Flyway V1–V5; validate mode |
+| 12 | Why `TransactionInsightService`? | Future hook; **zero callers** |
+| 13 | Forecast Center vs AI Accountant forecasts? | **Different code paths** |
+| 14 | Audit trail? | **None** |
+| 15 | Production deployment? | Docker manual; FE likely Vercel |
+| 16 | Horizontal scale? | API stateless OK; **schedulers duplicate** |
+| 17 | Monitoring? | `/api/health` only |
+| 18 | Why pluggable providers with no LLM beans? | ADR-001 forward compatibility |
+| 19 | Business Guide — all from API? | **Mixed** — articles API; FOP/KVED mock |
+| 20 | Biggest production blocker? | **Data trust** (seed + no audit + tax constants) |
+
+---
+
+## Project Weaknesses (Weak Spots)
+
+| Category | Weakness |
+|----------|----------|
+| **Data trust** | Auto-seed writes realistic financial history without labeling |
+| **Compliance** | No audit log; tax advice from hardcoded rules without versioning |
+| **Security** | Dev-grade secrets, localStorage tokens, incomplete session lifecycle |
+| **Architecture consistency** | Duplicate forecast/tax logic; dead beans in DI graph |
+| **Testing** | Thin coverage surface; no contract/integration tests |
+| **Operations** | No Actuator, no staging pipeline, no automated smoke |
+| **Frontend** | Client-side auth guard only; partial mocks presented as product |
+| **Documentation** | Strong hub; module/API leaf docs and C4 L3 still thin |
+| **Governance** | ~28% architectural decisions lack formal ADR |
+
+---
+
+## Recommendations to Reach 90+ / 100
+
+### Documentation Health → 90+ (Grade A)
+
+| Priority | Action | Expected impact |
+|----------|--------|-----------------|
+| 1 | Add **C4 Component diagram** (`c4/c4-component.md`) | +3–4 pts |
+| 2 | Write **ADR-009** (tax/FOP config) and **ADR-013** (audit log decision) | +2–3 pts |
+| 3 | Sync `test-strategy.md`, `COVERAGE-REPORT.md`, module docs with catalog | +1–2 pts |
+| 4 | Add dedicated API docs or OpenAPI export links per module | +1–2 pts |
+| 5 | ADR for **intentional gaps**: settings backend, mock hybrid strategy | +2 pts |
+
+### Architecture Review Readiness → 90+ (production-grade)
+
+| Priority | Action | Closes risk |
+|----------|--------|-------------|
+| 1 | `flowiq.features.demo-seed-enabled=false` in prod + UI banner | R1 |
+| 2 | `V6`: `transactions.source` + API exposure | R1, R4 |
+| 3 | Externalize secrets; `application-prod.properties`; fail on default JWT | R3 |
+| 4 | `POST /api/auth/refresh` + axios interceptor | R5 |
+| 5 | `AuditLogService` on sensitive operations | R2 |
+| 6 | `TaxConfigurationService` single source of truth | R4 |
+| 7 | Testcontainers + Flyway in CI; staging deploy workflow | R13 |
+| 8 | Spring Actuator + secured health/metrics | R17 |
+| 9 | Unify forecast path or document contract test between engines | R9 |
+| 10 | Remove or gate `DemoUserSeedService` in prod | R6 |
+
+**Realistic target:** Documentation **90+** achievable in **1–2 doc sprints**; Review Readiness **90+** requires **code + ops** work (estimate **2–3 months** per [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) roadmap).
+
+---
+
+## What May Still Raise Questions When Reviewing Code
+
+Items **not obvious from docs alone** — architect may find in IDE / PR walkthrough:
+
+| # | Code finding | Why it triggers questions |
+|---|--------------|---------------------------|
+| 1 | `JwtAuthenticationFilter` — `catch (Exception ignored)` | Silent auth failures; hard to debug security incidents |
+| 2 | `DemoUserSeedService` logs **password** at INFO on create | Security hygiene red flag |
+| 3 | `generateRefreshToken()` exists but filter **rejects** refresh tokens | Looks half-implemented |
+| 4 | `AuthController.logout()` returns **204 with no server state change** | Misleading "session invalidation" |
+| 5 | `TransactionInsightService` Spring bean with **no injection sites** | Dead code in production classpath |
+| 6 | `AnalyticsService` constructor takes `List<AnalyticsInsightProvider>` — **never used** | Incomplete refactor |
+| 7 | `AIAccountantService.chat()` loops empty `insightProviders` then templates | "AI chat" naming vs template replies |
+| 8 | `NotificationRuleEngine` imports task types — **tight coupling** across domains | Boundary smell |
+| 9 | `userRepository.findAll()` in schedulers | O(users) memory; no pagination |
+| 10 | `import_jobs` / `report_jobs` **no FK** to users | Referential integrity question |
+| 11 | `GlobalExceptionHandler` on same `@RestController` pattern | Unusual packaging (minor) |
+| 12 | `spring.jpa.show-sql=true` in committed properties | SQL leakage risk if copied to prod |
+| 13 | Frontend `authService.isAuthenticated()` — **token presence only**, no expiry check client-side | Stale token UX |
+| 14 | `business-guide.service.ts` static tax numbers **≠** backend constants | Cross-stack consistency |
+| 15 | Surefire excludes `*Tests.java` — context load test **not in CI** | False confidence in "green" build |
+| 16 | `FeatureFlags.bankIntegrationsEnabled` — flag exists, **no runtime branch** in import flow | Dead configuration |
+| 17 | Report `BYTEA` in same DB as transactions | Capacity planning question |
+| 18 | `KnowledgeService` provider priority logic (skip DB provider if others exist) | Subtle ADR-001 behavior |
+| 19 | No `@Transactional` on some read-heavy controller paths | Consistency under load (minor) |
+| 20 | Package split: controllers in root vs `tasks/`, `forecasts/`, `knowledge/` | Layer consistency / future modularization |
+
+---
+
+## Recommended Review Sessions
+
+### Session 1 — Context & boundaries (30 min)
+
+1. [C4 Context](c4/c4-context.md) + [C4 Containers](c4/c4-container.md)
+2. MVP vs planned: banks, LLM ([data-sources.md](data-sources.md))
+3. **TransactionSeedService** policy for production
+
+### Session 2 — Data & trust (45 min)
+
+1. [Data Sources](data-sources.md) module matrix
+2. Tax/FOP constants — ADR-009 proposal
+3. Audit log requirements (TD-C02)
+
+### Session 3 — Intelligence layer (45 min)
+
+1. [AI Quality Factory](ai-quality-factory.md) + [AI Agents](ai-agents-architecture.md)
+2. [AI_DOCUMENTATION_AUDIT_REPORT.md](AI_DOCUMENTATION_AUDIT_REPORT.md)
+3. Dual forecast paths — consolidate or accept?
+
+### Session 4 — Security, CI/CD, roadmap (30 min)
+
+1. [JWT flow](../security/jwt-flow.md) + refresh gap
+2. [CI/CD as-built](../deployment/ci-cd-as-built.md) + [evolution plan](../deployment/CI_CD_EVOLUTION_PLAN.md)
+3. [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) — prioritize Month 1–3
+
+---
+
+## Document Index
 
 | Document | Link |
 |----------|------|
 | C4 Context | [c4/c4-context.md](c4/c4-context.md) |
 | C4 Containers | [c4/c4-container.md](c4/c4-container.md) |
 | Data Sources | [data-sources.md](data-sources.md) |
-| AI Quality Factory | [ai-quality-factory.md](ai-quality-factory.md) |
-| AI Agents | [ai-agents-architecture.md](ai-agents-architecture.md) |
-| AI Documentation Audit | [AI_DOCUMENTATION_AUDIT_REPORT.md](AI_DOCUMENTATION_AUDIT_REPORT.md) |
-| Architect Review Cheat Sheet | [ARCHITECT_REVIEW_CHEAT_SHEET.md](ARCHITECT_REVIEW_CHEAT_SHEET.md) |
+| System Component Catalog | [SYSTEM_COMPONENT_CATALOG.md](SYSTEM_COMPONENT_CATALOG.md) |
+| Architect Interview Guide (56 Q) | [ARCHITECT_INTERVIEW_GUIDE.md](ARCHITECT_INTERVIEW_GUIDE.md) |
+| Architect Cheat Sheet | [ARCHITECT_REVIEW_CHEAT_SHEET.md](ARCHITECT_REVIEW_CHEAT_SHEET.md) |
+| ADR Defense Guide | [ADR_DEFENSE_GUIDE.md](ADR_DEFENSE_GUIDE.md) |
 | Technical Debt Register | [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) |
+| AI Documentation Audit | [AI_DOCUMENTATION_AUDIT_REPORT.md](AI_DOCUMENTATION_AUDIT_REPORT.md) |
+| CI/CD As-Built | [../deployment/ci-cd-as-built.md](../deployment/ci-cd-as-built.md) |
 | ADR Index | [adr/README.md](adr/README.md) |
-| ADR Coverage | [adr/ADR_COVERAGE_REPORT.md](adr/ADR_COVERAGE_REPORT.md) |
 | Full docs index | [../index.md](../index.md) |
 
 ---
 
-**Prepared by:** Architecture documentation audit (2026-06-17)  
-**Next review:** After ADR-009/017 and C4 Component diagram, or before production go-live
+**Prepared by:** Final architecture documentation audit  
+**Next review:** After C4 Component diagram + ADR-009/013, or before production go-live

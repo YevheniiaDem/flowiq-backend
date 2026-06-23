@@ -103,7 +103,7 @@ flowchart LR
     BE --> PG
 ```
 
-Production target: frontend on Vercel (`https://flowiq.vercel.app` in CORS), backend TBD (no Dockerfile in repo).
+Production target: frontend on Vercel (`https://flowiq.vercel.app` in CORS); backend via `Dockerfile` (manual build/deploy) or managed JVM host — **CD not automated**. See [Docker](../deployment/docker.md) and [CI/CD](../deployment/ci-cd.md).
 
 ## Cross-References
 
