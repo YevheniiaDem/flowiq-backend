@@ -16,6 +16,7 @@
 - [Data Sources](architecture/data-sources.md)
 - [AI Quality Factory](architecture/ai-quality-factory.md)
 - [AI Agents Architecture](architecture/ai-agents-architecture.md)
+- [One-Page Architect Brief](architecture/ONE_PAGE_ARCHITECT_BRIEF.md) — 5-min prep before architect review
 - [Architecture Review Readiness](architecture/ARCHITECTURE_REVIEW_READINESS.md)
 - [System Component Catalog](architecture/SYSTEM_COMPONENT_CATALOG.md) — full backend/frontend/DB inventory
 - [Request Flow Map](architecture/REQUEST_FLOW_MAP.md) — Controller → DB dependency chains

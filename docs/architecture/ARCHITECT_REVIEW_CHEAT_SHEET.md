@@ -2,7 +2,7 @@
 
 **Goal:** Present FlowIQ architecture in **10–15 minutes**.  
 **Rule:** Facts only — verified against `flowiq-backend` and `flowiq-frontend` code (2026-06-23).  
-**Deep dives:** [ADR Defense Guide](ADR_DEFENSE_GUIDE.md) · [AI Audit](AI_DOCUMENTATION_AUDIT_REPORT.md) · [Data Sources](data-sources.md)
+**Deep dives:** [One-Page Brief](ONE_PAGE_ARCHITECT_BRIEF.md) · [ADR Defense Guide](ADR_DEFENSE_GUIDE.md) · [AI Audit](AI_DOCUMENTATION_AUDIT_REPORT.md) · [Data Sources](data-sources.md)
 
 ---
 
