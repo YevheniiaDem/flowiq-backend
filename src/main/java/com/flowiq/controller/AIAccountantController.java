@@ -1,5 +1,8 @@
 package com.flowiq.controller;
 
+import com.flowiq.audit.AuditEventType;
+import com.flowiq.audit.ResourceType;
+import com.flowiq.audit.aspect.Auditable;
 import com.flowiq.config.OpenApiConfig;
 import com.flowiq.config.openapi.ApiErrorResponses;
 import com.flowiq.dto.request.AIAccountantChatRequest;
@@ -76,6 +79,7 @@ public class AIAccountantController {
     @ApiResponse(responseCode = "200", description = "AI chat response",
             content = @Content(schema = @Schema(implementation = AIAccountantChatResponse.class)))
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.AI_ACCOUNTANT_CHAT, resourceType = ResourceType.AI_CHAT)
     @PostMapping("/chat")
     public ResponseEntity<AIAccountantChatResponse> chat(@Valid @RequestBody AIAccountantChatRequest request) {
         return ResponseEntity.ok(aiAccountantService.chat(request));

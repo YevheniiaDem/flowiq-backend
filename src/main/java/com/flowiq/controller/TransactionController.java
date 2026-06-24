@@ -1,5 +1,8 @@
 package com.flowiq.controller;
 
+import com.flowiq.audit.AuditEventType;
+import com.flowiq.audit.ResourceType;
+import com.flowiq.audit.aspect.Auditable;
 import com.flowiq.config.OpenApiConfig;
 import com.flowiq.config.openapi.ApiErrorResponses;
 import com.flowiq.dto.request.CreateTransactionRequest;
@@ -91,6 +94,7 @@ public class TransactionController {
     @ApiResponse(responseCode = "201", description = "Transaction created",
             content = @Content(schema = @Schema(implementation = TransactionResponse.class)))
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.TRANSACTION_CREATE, resourceType = ResourceType.TRANSACTION, resourceId = "#result.id")
     @PostMapping
     public ResponseEntity<TransactionResponse> create(@Valid @RequestBody CreateTransactionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionService.create(request));
@@ -100,6 +104,7 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", description = "Transaction updated",
             content = @Content(schema = @Schema(implementation = TransactionResponse.class)))
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.TRANSACTION_UPDATE, resourceType = ResourceType.TRANSACTION, resourceId = "#id")
     @PutMapping("/{id}")
     public ResponseEntity<TransactionResponse> update(
             @Parameter(description = "Transaction ID") @PathVariable Long id,
@@ -111,6 +116,7 @@ public class TransactionController {
     @Operation(summary = "Delete transaction", description = "Permanently deletes a transaction by ID.")
     @ApiResponse(responseCode = "204", description = "Transaction deleted")
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.TRANSACTION_DELETE, resourceType = ResourceType.TRANSACTION, resourceId = "#id")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@Parameter(description = "Transaction ID") @PathVariable Long id) {
         transactionService.delete(id);

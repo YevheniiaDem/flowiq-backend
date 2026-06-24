@@ -1,5 +1,8 @@
 package com.flowiq.controller;
 
+import com.flowiq.audit.AuditEventType;
+import com.flowiq.audit.ResourceType;
+import com.flowiq.audit.aspect.Auditable;
 import com.flowiq.config.OpenApiConfig;
 import com.flowiq.config.openapi.ApiErrorResponses;
 import com.flowiq.dto.request.GenerateReportRequest;
@@ -74,6 +77,7 @@ public class ReportsController {
     @ApiResponse(responseCode = "201", description = "Report generation started",
             content = @Content(schema = @Schema(implementation = ReportJobResponse.class)))
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.REPORT_GENERATE, resourceType = ResourceType.REPORT_JOB, resourceId = "#result.id")
     @PostMapping("/generate")
     public ResponseEntity<ReportJobResponse> generate(@Valid @RequestBody GenerateReportRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(reportsService.generate(request));

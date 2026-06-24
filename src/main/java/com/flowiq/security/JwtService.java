@@ -1,6 +1,9 @@
 package com.flowiq.security;
 
+import com.flowiq.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -70,6 +73,25 @@ public class JwtService {
 
     public boolean isAccessToken(String token) {
         return "access".equals(extractClaim(token, claims -> claims.get("type", String.class)));
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractClaim(token, claims -> claims.get("type", String.class)));
+    }
+
+    public void validateRefreshToken(String token) {
+        try {
+            if (!isRefreshToken(token)) {
+                throw new UnauthorizedException("Invalid or expired refresh token");
+            }
+            if (isTokenExpired(token)) {
+                throw new UnauthorizedException("Invalid or expired refresh token");
+            }
+        } catch (ExpiredJwtException e) {
+            throw new UnauthorizedException("Invalid or expired refresh token");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException("Invalid or expired refresh token");
+        }
     }
 
     private boolean isTokenExpired(String token) {

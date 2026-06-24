@@ -1,5 +1,8 @@
 package com.flowiq.controller;
 
+import com.flowiq.audit.AuditEventType;
+import com.flowiq.audit.ResourceType;
+import com.flowiq.audit.aspect.Auditable;
 import com.flowiq.config.OpenApiConfig;
 import com.flowiq.config.openapi.ApiErrorResponses;
 import com.flowiq.dto.response.ImportJobResponse;
@@ -40,6 +43,7 @@ public class ImportController {
     @ApiResponse(responseCode = "201", description = "Import job created",
             content = @Content(schema = @Schema(implementation = ImportJobResponse.class)))
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.IMPORT_UPLOAD, resourceType = ResourceType.IMPORT_JOB, resourceId = "#result.id")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ImportJobResponse> upload(
             @Parameter(description = "Bank statement CSV file", required = true)

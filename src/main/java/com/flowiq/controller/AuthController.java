@@ -1,10 +1,15 @@
 package com.flowiq.controller;
 
+import com.flowiq.audit.AuditEventType;
+import com.flowiq.audit.ResourceType;
+import com.flowiq.audit.aspect.Auditable;
 import com.flowiq.config.OpenApiConfig;
 import com.flowiq.config.openapi.ApiErrorResponses;
 import com.flowiq.dto.request.LoginRequest;
+import com.flowiq.dto.request.RefreshTokenRequest;
 import com.flowiq.dto.request.RegisterRequest;
 import com.flowiq.dto.response.AuthResponse;
+import com.flowiq.dto.response.RefreshTokenResponse;
 import com.flowiq.dto.response.UserResponse;
 import com.flowiq.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,6 +66,20 @@ public class AuthController {
     }
 
     @Operation(
+            summary = "Refresh JWT tokens",
+            description = "Exchanges a valid refresh token for a new access and refresh token pair. No authentication required.",
+            security = {}
+    )
+    @SecurityRequirements
+    @ApiResponse(responseCode = "200", description = "New token pair issued",
+            content = @Content(schema = @Schema(implementation = RefreshTokenResponse.class)))
+    @ApiErrorResponses
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
+    }
+
+    @Operation(
             summary = "Get current user",
             description = "Returns the profile of the currently authenticated user. Requires a valid JWT Bearer token."
     )
@@ -80,6 +99,7 @@ public class AuthController {
     @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @ApiResponse(responseCode = "204", description = "Logout successful")
     @ApiErrorResponses
+    @Auditable(value = AuditEventType.AUTH_LOGOUT, resourceType = ResourceType.SESSION)
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         return ResponseEntity.noContent().build();
