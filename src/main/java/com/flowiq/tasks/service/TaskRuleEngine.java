@@ -4,6 +4,9 @@ import com.flowiq.entity.Transaction;
 import com.flowiq.entity.User;
 import com.flowiq.notifications.entity.NotificationSeverity;
 import com.flowiq.notifications.entity.NotificationType;
+import com.flowiq.notifications.preferences.NotificationPreferenceKey;
+import com.flowiq.notifications.preferences.NotificationPreferenceKeys;
+import com.flowiq.profile.service.FopProfileService;
 import com.flowiq.repository.TransactionRepository;
 import com.flowiq.tasks.entity.TaskPriority;
 import com.flowiq.tasks.entity.TaskType;
@@ -31,6 +34,7 @@ public class TaskRuleEngine {
 
     private final TaskGeneratorService taskGenerator;
     private final TransactionRepository transactionRepository;
+    private final FopProfileService fopProfileService;
 
     public void generateForUser(User user) {
         Long userId = user.getId();
@@ -72,7 +76,8 @@ public class TaskRuleEngine {
                     "Нагадування про податок",
                     String.format("До сплати єдиного податку залишилось %d дн.", daysUntil),
                     NotificationType.TAX,
-                    daysUntil <= 3 ? NotificationSeverity.CRITICAL : NotificationSeverity.WARNING
+                    daysUntil <= 3 ? NotificationSeverity.CRITICAL : NotificationSeverity.WARNING,
+                    NotificationPreferenceKeys.taskReminderKey(today, deadline)
             );
         }
     }
@@ -104,6 +109,7 @@ public class TaskRuleEngine {
                     null,
                     null,
                     null,
+                    null,
                     null
             );
         }
@@ -131,7 +137,8 @@ public class TaskRuleEngine {
                     "Дедлайн декларації",
                     String.format("Квартальна декларація до %s", deadline),
                     NotificationType.TAX,
-                    NotificationSeverity.WARNING
+                    NotificationSeverity.WARNING,
+                    NotificationPreferenceKeys.taskReminderKey(today, deadline)
             );
         }
     }
@@ -162,14 +169,15 @@ public class TaskRuleEngine {
                 "Річна декларація",
                 "Час готувати річну декларацію ФОП",
                 NotificationType.TAX,
-                NotificationSeverity.INFO
+                NotificationSeverity.INFO,
+                NotificationPreferenceKeys.taskReminderKey(today, annualDeadline)
         );
     }
 
     private void generateFopLimitReviewTask(Long userId, LocalDate today) {
         LocalDate yearStart = LocalDate.of(today.getYear(), 1, 1);
         BigDecimal annualIncome = sumRange(userId, Transaction.Type.REVENUE, yearStart, today);
-        int fopGroup = resolveFopGroup(annualIncome);
+        int fopGroup = fopProfileService.resolveEffectiveFopGroup(userId, annualIncome);
         if (fopGroup == 0) {
             return;
         }
@@ -201,7 +209,8 @@ public class TaskRuleEngine {
                 "Ліміт ФОП",
                 String.format("Використано %.0f%% ліміту ФОП — потрібен перегляд", usagePercent),
                 NotificationType.FOP_LIMIT,
-                usagePercent >= 95 ? NotificationSeverity.CRITICAL : NotificationSeverity.WARNING
+                usagePercent >= 95 ? NotificationSeverity.CRITICAL : NotificationSeverity.WARNING,
+                NotificationPreferenceKey.FINANCIAL_TAX_WARNING
         );
     }
 
@@ -232,7 +241,8 @@ public class TaskRuleEngine {
                     "AI-рекомендація",
                     "Витрати зростають швидше за дохід",
                     NotificationType.AI_INSIGHT,
-                    NotificationSeverity.WARNING
+                    NotificationSeverity.WARNING,
+                    NotificationPreferenceKey.AI_WARNINGS
             );
         }
 
@@ -246,6 +256,7 @@ public class TaskRuleEngine {
                     TaskPriority.MEDIUM,
                     today.plusDays(5),
                     false,
+                    null,
                     null,
                     null,
                     null,
@@ -268,7 +279,8 @@ public class TaskRuleEngine {
                     "Підготовка до податку",
                     String.format("До сплати податку %d дн.", daysUntilTax),
                     NotificationType.TAX,
-                    NotificationSeverity.WARNING
+                    NotificationSeverity.WARNING,
+                    NotificationPreferenceKeys.taskReminderKey(today, nextTaxDeadline)
             );
         }
     }
@@ -289,13 +301,6 @@ public class TaskRuleEngine {
             }
         }
         return LocalDate.of(today.getYear() + 1, 5, 10);
-    }
-
-    private int resolveFopGroup(BigDecimal annualIncome) {
-        if (annualIncome.compareTo(INCOME_LIMITS.get(1)) <= 0) return 1;
-        if (annualIncome.compareTo(INCOME_LIMITS.get(2)) <= 0) return 2;
-        if (annualIncome.compareTo(INCOME_LIMITS.get(3)) <= 0) return 3;
-        return 0;
     }
 
     private BigDecimal sum(Long userId, Transaction.Type type, YearMonth month) {

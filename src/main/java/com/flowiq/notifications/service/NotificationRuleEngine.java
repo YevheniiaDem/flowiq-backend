@@ -2,7 +2,14 @@ package com.flowiq.notifications.service;
 
 import com.flowiq.entity.Transaction;
 import com.flowiq.entity.User;
+import com.flowiq.notifications.entity.NotificationSeverity;
+import com.flowiq.notifications.entity.NotificationType;
+import com.flowiq.notifications.preferences.NotificationPreferenceKey;
+import com.flowiq.profile.service.FopProfileService;
 import com.flowiq.repository.TransactionRepository;
+import com.flowiq.tasks.entity.TaskPriority;
+import com.flowiq.tasks.entity.TaskType;
+import com.flowiq.tasks.service.TaskGeneratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,15 +18,10 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import com.flowiq.notifications.entity.NotificationSeverity;
-import com.flowiq.notifications.entity.NotificationType;
-import com.flowiq.tasks.entity.TaskPriority;
-import com.flowiq.tasks.entity.TaskType;
-import com.flowiq.tasks.service.TaskGeneratorService;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +43,7 @@ public class NotificationRuleEngine {
     private final NotificationGeneratorService notificationGenerator;
     private final TaskGeneratorService taskGenerator;
     private final TransactionRepository transactionRepository;
+    private final FopProfileService fopProfileService;
 
     public void generateForUser(User user) {
         Long userId = user.getId();
@@ -53,12 +56,13 @@ public class NotificationRuleEngine {
         generateRevenueDropNotification(userId, current);
         generateProfitGrowthNotification(userId, current);
         generateTaxOptimizationNotification(userId, today);
+        generateForecastAnomalyNotification(userId, today);
     }
 
     private void generateFopLimitNotifications(Long userId, LocalDate today) {
         LocalDate yearStart = LocalDate.of(today.getYear(), 1, 1);
         BigDecimal annualIncome = sumRange(userId, Transaction.Type.REVENUE, yearStart, today);
-        int fopGroup = resolveFopGroup(annualIncome);
+        int fopGroup = fopProfileService.resolveEffectiveFopGroup(userId, annualIncome);
         if (fopGroup == 0) {
             return;
         }
@@ -79,7 +83,8 @@ public class NotificationRuleEngine {
                     NotificationType.FOP_LIMIT,
                     NotificationSeverity.CRITICAL,
                     "/business-guide",
-                    expiresAt
+                    expiresAt,
+                    NotificationPreferenceKey.FINANCIAL_TAX_WARNING
             );
         } else if (usagePercent >= 85) {
             notificationGenerator.createIfAbsent(
@@ -90,7 +95,8 @@ public class NotificationRuleEngine {
                     NotificationType.FOP_LIMIT,
                     NotificationSeverity.WARNING,
                     "/business-guide",
-                    expiresAt
+                    expiresAt,
+                    NotificationPreferenceKey.FINANCIAL_TAX_WARNING
             );
         } else if (usagePercent >= 70) {
             notificationGenerator.createIfAbsent(
@@ -101,7 +107,8 @@ public class NotificationRuleEngine {
                     NotificationType.FOP_LIMIT,
                     NotificationSeverity.WARNING,
                     "/business-guide",
-                    expiresAt
+                    expiresAt,
+                    NotificationPreferenceKey.FINANCIAL_TAX_WARNING
             );
         }
     }
@@ -136,7 +143,8 @@ public class NotificationRuleEngine {
                     NotificationType.TAX,
                     severity,
                     "/ai-accountant",
-                    deadline.atTime(23, 59)
+                    deadline.atTime(23, 59),
+                    NotificationPreferenceKey.FINANCIAL_TAXES
             );
             taskGenerator.createFromNotification(
                     userId,
@@ -177,7 +185,8 @@ public class NotificationRuleEngine {
                     NotificationType.FINANCIAL,
                     NotificationSeverity.WARNING,
                     "/analytics",
-                    current.atEndOfMonth().atTime(23, 59)
+                    current.atEndOfMonth().atTime(23, 59),
+                    NotificationPreferenceKey.FINANCIAL_LARGE_EXPENSE
             );
             taskGenerator.createFromNotification(
                     userId, key, "Переглянути зростання витрат", msg,
@@ -210,13 +219,14 @@ public class NotificationRuleEngine {
                     NotificationType.FINANCIAL,
                     NotificationSeverity.WARNING,
                     "/analytics",
-                    current.atEndOfMonth().atTime(23, 59)
+                    current.atEndOfMonth().atTime(23, 59),
+                    NotificationPreferenceKey.FINANCIAL_NEGATIVE_CASH_FLOW
             );
         }
     }
 
     private void generateProfitGrowthNotification(Long userId, YearMonth current) {
-        List<BigDecimal> lastThreeProfit = new java.util.ArrayList<>();
+        List<BigDecimal> lastThreeProfit = new ArrayList<>();
         for (int i = 2; i >= 0; i--) {
             YearMonth month = current.minusMonths(i);
             BigDecimal revenue = sum(userId, Transaction.Type.REVENUE, month);
@@ -238,7 +248,8 @@ public class NotificationRuleEngine {
                     NotificationType.FINANCIAL,
                     NotificationSeverity.SUCCESS,
                     "/analytics",
-                    current.atEndOfMonth().atTime(23, 59)
+                    current.atEndOfMonth().atTime(23, 59),
+                    NotificationPreferenceKey.FINANCIAL_LARGE_INCOME
             );
         }
     }
@@ -246,7 +257,7 @@ public class NotificationRuleEngine {
     private void generateTaxOptimizationNotification(Long userId, LocalDate today) {
         LocalDate yearStart = LocalDate.of(today.getYear(), 1, 1);
         BigDecimal annualIncome = sumRange(userId, Transaction.Type.REVENUE, yearStart, today);
-        int optimalGroup = resolveFopGroup(annualIncome);
+        int optimalGroup = fopProfileService.resolveEffectiveFopGroup(userId, annualIncome);
 
         if (optimalGroup <= 1) {
             return;
@@ -273,9 +284,48 @@ public class NotificationRuleEngine {
                     NotificationType.AI_INSIGHT,
                     NotificationSeverity.INFO,
                     "/business-guide",
-                    LocalDate.of(today.getYear(), 12, 31).atTime(23, 59)
+                    LocalDate.of(today.getYear(), 12, 31).atTime(23, 59),
+                    NotificationPreferenceKey.AI_TAX_OPTIMIZATION
             );
         }
+    }
+
+    private void generateForecastAnomalyNotification(Long userId, LocalDate today) {
+        LocalDate yearStart = LocalDate.of(today.getYear(), 1, 1);
+        BigDecimal annualIncome = sumRange(userId, Transaction.Type.REVENUE, yearStart, today);
+        int fopGroup = fopProfileService.resolveEffectiveFopGroup(userId, annualIncome);
+        if (fopGroup == 0) {
+            return;
+        }
+
+        BigDecimal incomeLimit = INCOME_LIMITS.get(fopGroup);
+        int dayOfYear = today.getDayOfYear();
+        int daysInYear = today.isLeapYear() ? 366 : 365;
+        BigDecimal projected = annualIncome
+                .multiply(new BigDecimal(daysInYear))
+                .divide(new BigDecimal(dayOfYear), 2, RoundingMode.HALF_UP);
+        double projectedUsage = projected.multiply(new BigDecimal("100"))
+                .divide(incomeLimit, 2, RoundingMode.HALF_UP)
+                .doubleValue();
+
+        if (projectedUsage < 90) {
+            return;
+        }
+
+        String key = "forecast-anomaly-" + today.getYear() + "-m" + today.getMonthValue();
+        notificationGenerator.createIfAbsent(
+                userId,
+                key,
+                "Аномалія прогнозу",
+                projectedUsage >= 100
+                        ? "Прогноз показує перевищення річного ліміту ФОП"
+                        : "Прогноз доходу наближається до ліміту ФОП",
+                NotificationType.AI_INSIGHT,
+                projectedUsage >= 100 ? NotificationSeverity.CRITICAL : NotificationSeverity.WARNING,
+                "/forecasts",
+                LocalDate.of(today.getYear(), 12, 31).atTime(23, 59),
+                NotificationPreferenceKey.AI_FORECAST_ANOMALY
+        );
     }
 
     private NotificationSeverity resolveTaxSeverity(int daysUntil) {
@@ -293,19 +343,6 @@ public class NotificationRuleEngine {
             return "Завтра останній день сплати ЄСВ";
         }
         return String.format(Locale.forLanguageTag("uk-UA"), "Через %d днів потрібно сплатити податок", daysUntil);
-    }
-
-    private int resolveFopGroup(BigDecimal annualIncome) {
-        if (annualIncome.compareTo(INCOME_LIMITS.get(1)) <= 0) {
-            return 1;
-        }
-        if (annualIncome.compareTo(INCOME_LIMITS.get(2)) <= 0) {
-            return 2;
-        }
-        if (annualIncome.compareTo(INCOME_LIMITS.get(3)) <= 0) {
-            return 3;
-        }
-        return 0;
     }
 
     private BigDecimal estimateTaxLoad(BigDecimal income, int fopGroup) {

@@ -29,6 +29,15 @@ public class User {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(length = 30)
+    private String phone;
+
     @Column(length = 100)
     private String company;
 

@@ -30,20 +30,31 @@ public class JwtService {
     private long refreshTokenExpiration;
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(userDetails, accessTokenExpiration, "access");
+        return generateAccessToken(userDetails, null);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(userDetails, refreshTokenExpiration, "refresh");
+        return generateRefreshToken(userDetails, null);
     }
 
-    private String generateToken(UserDetails userDetails, long expiration, String tokenType) {
+    public String generateAccessToken(UserDetails userDetails, String sessionId) {
+        return generateToken(userDetails, accessTokenExpiration, "access", sessionId);
+    }
+
+    public String generateRefreshToken(UserDetails userDetails, String sessionId) {
+        return generateToken(userDetails, refreshTokenExpiration, "refresh", sessionId);
+    }
+
+    private String generateToken(UserDetails userDetails, long expiration, String tokenType, String sessionId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", tokenType);
 
         if (userDetails instanceof UserPrincipal principal) {
             claims.put("userId", principal.getId());
             claims.put("role", principal.getRole().name());
+        }
+        if (sessionId != null && !sessionId.isBlank()) {
+            claims.put("sessionId", sessionId);
         }
 
         return buildToken(claims, userDetails.getUsername(), expiration);
@@ -77,6 +88,10 @@ public class JwtService {
 
     public boolean isRefreshToken(String token) {
         return "refresh".equals(extractClaim(token, claims -> claims.get("type", String.class)));
+    }
+
+    public String extractSessionId(String token) {
+        return extractClaim(token, claims -> claims.get("sessionId", String.class));
     }
 
     public void validateRefreshToken(String token) {

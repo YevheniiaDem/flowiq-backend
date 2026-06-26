@@ -119,12 +119,14 @@ public class ReportsService {
         } catch (Exception e) {
             job.setStatus(ReportJob.Status.FAILED);
             reportJobRepository.save(job);
+            notificationGeneratorService.notifyReportFailed(user.getId(), job.getId(), request.getReportType().name());
             throw new BadRequestException("Failed to generate report: " + e.getMessage());
         }
 
         ReportJob saved = reportJobRepository.save(job);
         if (saved.getStatus() == ReportJob.Status.COMPLETED) {
-            notificationGeneratorService.notifyReportCompleted(user.getId(), saved.getId(), saved.getFileName());
+            notificationGeneratorService.notifyReportCompleted(
+                    user.getId(), saved.getId(), saved.getFileName(), request.getFormat().name());
             taskGeneratorService.createReportReviewTask(user.getId(), saved.getId(), saved.getFileName());
         }
 

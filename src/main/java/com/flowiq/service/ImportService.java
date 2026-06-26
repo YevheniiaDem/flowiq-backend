@@ -95,6 +95,7 @@ public class ImportService {
         job.setRowsImported(0);
         job.setErrorsCount(0);
         job = importJobRepository.save(job);
+        notificationGeneratorService.notifyImportProcessing(user.getId(), job.getId(), file.getOriginalFilename());
 
         try {
             String csvContent = new String(file.getBytes(), StandardCharsets.UTF_8);
@@ -177,6 +178,10 @@ public class ImportService {
         if (imported > 0) {
             notificationGeneratorService.notifyImportCompleted(user.getId(), job.getId(), imported);
             taskGeneratorService.createImportReviewTask(user.getId(), job.getId(), imported);
+        } else if (job.getStatus() == ImportJob.Status.FAILED) {
+            notificationGeneratorService.notifyImportFailed(user.getId(), job.getId(), job.getFileName());
+        } else if (job.getStatus() == ImportJob.Status.PARTIAL) {
+            notificationGeneratorService.notifyImportPartial(user.getId(), job.getId(), imported, errors);
         }
     }
 

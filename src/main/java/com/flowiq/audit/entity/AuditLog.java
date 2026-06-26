@@ -62,7 +62,8 @@ public class AuditLog {
     @Column(name = "resource_id")
     private Long resourceId;
 
-    @Column(name = "ip_address", columnDefinition = "inet")
+    @JdbcTypeCode(SqlTypes.INET)
+    @Column(name = "ip_address")
     private String ipAddress;
 
     @Column(name = "user_agent", length = 512)

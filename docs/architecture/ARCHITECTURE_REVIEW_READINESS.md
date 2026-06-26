@@ -42,7 +42,8 @@ FlowIQ is a **demonstrable MVP** suitable for **architectural review sessions** 
 | [c4/c4-context.md](c4/c4-context.md) | ✅ User, FlowIQ, PostgreSQL, CSV; Bank/LLM external (planned) |
 | [c4/c4-container.md](c4/c4-container.md) | ✅ Frontend, Backend, DB, schedulers |
 | [data-sources.md](data-sources.md) | ✅ Per-module real vs seed vs mock |
-| [SYSTEM_COMPONENT_CATALOG.md](SYSTEM_COMPONENT_CATALOG.md) | ✅ 13 controllers, 9 tables, production flags |
+| [SYSTEM_COMPONENT_CATALOG.md](SYSTEM_COMPONENT_CATALOG.md) | ✅ 14 controllers, profile + sessions |
+| [PROFILE_ARCHITECTURE.md](PROFILE_ARCHITECTURE.md) | ✅ Profile/FOP/sessions API + Mermaid flows |
 | [ARCHITECT_INTERVIEW_GUIDE.md](ARCHITECT_INTERVIEW_GUIDE.md) | ✅ 56 Q&A code-verified |
 | [TECHNICAL_DEBT_REGISTER.md](TECHNICAL_DEBT_REGISTER.md) | ✅ 48 items (6 Critical) |
 
@@ -54,7 +55,7 @@ FlowIQ is a **demonstrable MVP** suitable for **architectural review sessions** 
 | 002 Transaction seed | `TransactionSeedService.seedIfEmpty()` | ✅ (risk: all environments) |
 | 003 AI quality factory | Distributed services, no orchestrator | ✅ |
 | 004 PostgreSQL | `compose.yaml`, `application.properties` | ✅ |
-| 005 Flyway | V1–V5, `ddl-auto=validate` | ✅ |
+| 005 Flyway | V1–V7, `ddl-auto=validate` | ✅ |
 | 006 JWT | `JwtService`, `JwtAuthenticationFilter` | ✅ refresh endpoint gap |
 | 007 Layered | Controller → Service → Repository | ✅ |
 | 008 Frontend | `app/`, `src/features/`, `api.ts` | ✅ |

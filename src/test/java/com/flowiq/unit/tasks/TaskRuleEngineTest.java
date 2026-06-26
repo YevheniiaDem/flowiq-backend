@@ -4,6 +4,8 @@ import com.flowiq.entity.Transaction;
 import com.flowiq.entity.User;
 import com.flowiq.notifications.entity.NotificationSeverity;
 import com.flowiq.notifications.entity.NotificationType;
+import com.flowiq.notifications.preferences.NotificationPreferenceKey;
+import com.flowiq.profile.service.FopProfileService;
 import com.flowiq.repository.TransactionRepository;
 import com.flowiq.tasks.entity.TaskPriority;
 import com.flowiq.tasks.entity.TaskType;
@@ -39,6 +41,8 @@ class TaskRuleEngineTest {
     private TaskGeneratorService taskGenerator;
     @Mock
     private TransactionRepository transactionRepository;
+    @Mock
+    private FopProfileService fopProfileService;
 
     @InjectMocks
     private TaskRuleEngine engine;
@@ -52,6 +56,7 @@ class TaskRuleEngineTest {
         when(transactionRepository.sumByUserAndTypeAndDateRange(
                 anyLong(), any(Transaction.Type.class), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(BigDecimal.ZERO);
+        when(fopProfileService.resolveEffectiveFopGroup(anyLong(), any(BigDecimal.class))).thenReturn(2);
     }
 
     @Test
@@ -77,7 +82,8 @@ class TaskRuleEngineTest {
                     any(),
                     any(),
                     any(),
-                    any()
+                    any(),
+                    any(NotificationPreferenceKey.class)
             );
         }
     }
@@ -104,8 +110,9 @@ class TaskRuleEngineTest {
                     anyBoolean(),
                     anyString(),
                     anyString(),
-                    eq(NotificationType.TAX),
-                    eq(NotificationSeverity.WARNING)
+                eq(NotificationType.TAX),
+                eq(NotificationSeverity.WARNING),
+                any(NotificationPreferenceKey.class)
             );
         }
     }
@@ -131,8 +138,9 @@ class TaskRuleEngineTest {
                     anyBoolean(),
                     eq("Річна декларація"),
                     anyString(),
-                    eq(NotificationType.TAX),
-                    eq(NotificationSeverity.INFO)
+                eq(NotificationType.TAX),
+                eq(NotificationSeverity.INFO),
+                any(NotificationPreferenceKey.class)
             );
         }
     }
@@ -156,7 +164,8 @@ class TaskRuleEngineTest {
                 eq("Ліміт ФОП"),
                 anyString(),
                 eq(NotificationType.FOP_LIMIT),
-                any(NotificationSeverity.class)
+                any(NotificationSeverity.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -179,7 +188,8 @@ class TaskRuleEngineTest {
                 any(),
                 any(),
                 any(),
-                any()
+                any(),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -223,7 +233,8 @@ class TaskRuleEngineTest {
                 eq("AI-рекомендація"),
                 anyString(),
                 eq(NotificationType.AI_INSIGHT),
-                eq(NotificationSeverity.WARNING)
+                eq(NotificationSeverity.WARNING),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -248,12 +259,13 @@ class TaskRuleEngineTest {
                     isNull(),
                     isNull(),
                     isNull(),
+                    isNull(),
                     isNull()
             );
         } else {
             verify(taskGenerator, never()).createIfAbsent(
                     eq(USER_ID), eq("monthly-report-" + YearMonth.now()), anyString(), anyString(),
-                    any(), any(), any(), anyBoolean(), any(), any(), any(), any());
+                    any(), any(), any(), anyBoolean(), any(), any(), any(), any(), any());
         }
     }
 
@@ -276,7 +288,8 @@ class TaskRuleEngineTest {
                 any(),
                 any(),
                 any(),
-                any()
+                any(),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -299,7 +312,8 @@ class TaskRuleEngineTest {
                 anyString(),
                 anyString(),
                 eq(NotificationType.FOP_LIMIT),
-                eq(NotificationSeverity.CRITICAL)
+                eq(NotificationSeverity.CRITICAL),
+                any(NotificationPreferenceKey.class)
         );
     }
 

@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -47,8 +48,11 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     @ApiErrorResponses
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    public ResponseEntity<AuthResponse> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request, httpRequest));
     }
 
     @Operation(
@@ -61,8 +65,11 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     @ApiErrorResponses
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return ResponseEntity.ok(authService.login(request, httpRequest));
     }
 
     @Operation(
@@ -94,14 +101,15 @@ public class AuthController {
 
     @Operation(
             summary = "Logout",
-            description = "Invalidates the current session on the client side. Requires a valid JWT Bearer token."
+            description = "Revokes the current server-side session. Requires a valid JWT Bearer token."
     )
     @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     @ApiResponse(responseCode = "204", description = "Logout successful")
     @ApiErrorResponses
     @Auditable(value = AuditEventType.AUTH_LOGOUT, resourceType = ResourceType.SESSION)
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    public ResponseEntity<Void> logout(HttpServletRequest httpRequest) {
+        authService.logout(httpRequest);
         return ResponseEntity.noContent().build();
     }
 }

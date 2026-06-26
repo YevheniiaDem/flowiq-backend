@@ -2,6 +2,7 @@ package com.flowiq.tasks.service;
 
 import com.flowiq.notifications.entity.NotificationSeverity;
 import com.flowiq.notifications.entity.NotificationType;
+import com.flowiq.notifications.preferences.NotificationPreferenceKey;
 import com.flowiq.notifications.service.NotificationGeneratorService;
 import com.flowiq.tasks.entity.Task;
 import com.flowiq.tasks.entity.TaskPriority;
@@ -34,7 +35,8 @@ public class TaskGeneratorService {
             String notificationTitle,
             String notificationMessage,
             NotificationType notificationType,
-            NotificationSeverity notificationSeverity
+            NotificationSeverity notificationSeverity,
+            NotificationPreferenceKey preferenceKey
     ) {
         if (taskRepository.existsByUserIdAndDeduplicationKey(userId, deduplicationKey)) {
             return null;
@@ -52,7 +54,7 @@ public class TaskGeneratorService {
 
         Task saved = taskRepository.save(task);
 
-        if (createNotification) {
+        if (createNotification && preferenceKey != null) {
             notificationGenerator.createIfAbsent(
                     userId,
                     "task-" + deduplicationKey,
@@ -61,7 +63,8 @@ public class TaskGeneratorService {
                     notificationType,
                     notificationSeverity,
                     "/tasks",
-                    dueDate != null ? dueDate.atTime(23, 59) : null
+                    dueDate != null ? dueDate.atTime(23, 59) : null,
+                    preferenceKey
             );
         }
 
@@ -82,7 +85,8 @@ public class TaskGeneratorService {
                 "Нове завдання: перевірка імпорту",
                 String.format("Перевірте %d імпортованих транзакцій", rowsImported),
                 NotificationType.SYSTEM,
-                NotificationSeverity.INFO
+                NotificationSeverity.INFO,
+                NotificationPreferenceKey.IMPORT_CSV_PROCESSING
         );
     }
 
@@ -108,6 +112,7 @@ public class TaskGeneratorService {
                 null,
                 null,
                 null,
+                null,
                 null
         );
     }
@@ -118,15 +123,16 @@ public class TaskGeneratorService {
                 userId,
                 "report-review-" + jobId,
                 "Переглянути звіт",
-                "Звіт сформовано: " + fileName + ". Перевірте дані та завантажте при потребі.",
+                "Перегляньте згенерований звіт: " + fileName,
                 TaskType.REPORTING,
                 TaskPriority.MEDIUM,
                 LocalDate.now().plusDays(7),
                 true,
-                "Нове завдання: перегляд звіту",
-                "Звіт готовий до перегляду: " + fileName,
+                "Звіт готовий",
+                "Новий звіт доступний для перегляду",
                 NotificationType.REPORT,
-                NotificationSeverity.INFO
+                NotificationSeverity.SUCCESS,
+                NotificationPreferenceKey.REPORT_READY
         );
     }
 }

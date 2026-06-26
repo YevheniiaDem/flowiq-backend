@@ -34,7 +34,7 @@ flowchart TB
 
     subgraph Data
         PG[(PostgreSQL)]
-        FLY[Flyway V1-V5]
+        FLY[Flyway V1-V7]
     end
 
     ROUTES --> FEAT --> SVC_FE
@@ -66,7 +66,9 @@ HTTP entry points. All except auth/health/Swagger require JWT (`SecurityConfig`)
 | `ReportsController` | `/api/reports` | Report jobs | `ReportsService` | list, preview, generate, download | **Yes** |
 | `TaskController` | `/api/tasks` | Tasks CRUD + suggestions | `TaskService` | list, today, upcoming, grouped, suggestions, `POST` | **Yes** |
 | `NotificationController` | `/api/notifications` | In-app notifications | `NotificationService` | list, unread-count, summary | **Yes** |
+| `NotificationPreferenceController` | `/api/settings/notifications` | Per-user notification preferences | `NotificationPreferenceService` | `GET`, `PUT`, `POST /reset` | **Yes** |
 | `BusinessGuideController` | `/api/business-guide` | Knowledge base API | `KnowledgeService` | articles, search, categories, dashboard-snapshot | **Yes** |
+| `ProfileController` | `/api/profile` | Personal profile, FOP, password, sessions | `ProfileService`, `SessionService`, `AvatarStorageService` | `GET/PUT /profile`, `/fop`, `/change-password`, `/sessions/*`, avatar upload | **Yes** |
 
 **Files:** `src/main/java/com/flowiq/**/**Controller.java` (13 classes)
 
@@ -114,12 +116,13 @@ Business orchestration layer (`@Service` + security helpers).
 | `ReportsService` | Report preview/generate/download | `ReportFileGenerator`, `AnalyticsService`, generators | `ReportsController` | **Yes** |
 | `TaskService` | Task list, CRUD, snapshot, rule trigger | `TaskRuleEngine`, `TransactionSeedService` | `TaskController`, `DashboardController` | **Yes** |
 | `NotificationService` | Read/mark notifications | `NotificationRepository`, `UserRepository` | `NotificationController` | **Yes** |
+| `NotificationPreferenceService` | User notification settings, `isInAppEnabled` gate | `NotificationPreferenceRepository`, `UserRepository`, `AuditService` | `NotificationPreferenceController`, `NotificationGeneratorService` | **Yes** |
 | `KnowledgeService` | Article search, categories, assist | `KnowledgeArticleRepository`, `DatabaseKnowledgeProvider`, `KnowledgeProvider` list | `BusinessGuideController`, `DashboardController` | **Yes** |
 | `TransactionSeedService` | Auto-seed demo transactions | `TransactionRepository` | Called from 7 domain services | **Yes** |
 | `TransactionInsightService` | Build analysis context for future AI | `TransactionRepository` | **None** | **No** |
 | `DemoUserSeedService` | Create `demo@flowiq.ai` on startup | `UserRepository`, `PasswordEncoder` | `ApplicationRunner` | **Yes** (risk in prod) |
 | `TaskGeneratorService` | Persist generated tasks | `TaskRepository`, `NotificationGeneratorService` | `TaskRuleEngine`, `ImportService`, `ReportsService` | **Yes** |
-| `NotificationGeneratorService` | Persist notifications | `NotificationRepository` | `NotificationRuleEngine`, import/report hooks | **Yes** |
+| `NotificationGeneratorService` | Persist notifications (preference-gated) | `NotificationRepository`, `NotificationPreferenceService` | `NotificationRuleEngine`, import/report hooks | **Yes** |
 | `JwtService` | JWT create/validate | `application.properties` secrets | `AuthService`, `JwtAuthenticationFilter` | **Yes** |
 | `CustomUserDetailsService` | Load user for Spring Security | `UserRepository` | `SecurityConfig`, JWT filter | **Yes** |
 
@@ -139,6 +142,7 @@ Spring Data JPA interfaces.
 | `ImportJobRepository` | `ImportJob` | Import job status | `ImportService` | **Yes** |
 | `ReportJobRepository` | `ReportJob` | Report metadata + file bytes | `ReportsService` | **Yes** |
 | `NotificationRepository` | `Notification` | In-app notifications | `NotificationService`, `NotificationGeneratorService` | **Yes** |
+| `NotificationPreferenceRepository` | `NotificationPreference` | User notification settings | `NotificationPreferenceService` | **Yes** |
 | `TaskRepository` | `Task` | Compliance/business tasks | `TaskService`, `TaskGeneratorService` | **Yes** |
 | `KnowledgeArticleRepository` | `KnowledgeArticle` | Business Guide content | `KnowledgeService` | **Yes** |
 
@@ -155,6 +159,7 @@ Spring Data JPA interfaces.
 | `ImportJob` | `import_jobs` | CSV import runs | `user_id` (no FK in V1) | **Yes** |
 | `ReportJob` | `report_jobs` | Generated reports | `user_id` (no FK in V1) | **Yes** |
 | `Notification` | `notifications` | Alerts | `user_id` | **Yes** |
+| `NotificationPreference` | `notification_preferences` | Per-type/channel toggles | `user_id` → `users` | **Yes** |
 | `Task` | `tasks` | Tasks | `user_id` → `users` | **Yes** |
 | `KnowledgeArticle` | `knowledge_articles` | KB articles (global) | No `user_id` | **Yes** |
 
@@ -343,10 +348,11 @@ flowchart TB
 | `reports` | Report generation UI | `useReports` | **Yes** |
 | `tasks` | Task management | `useTasks` | **Yes** |
 | `notifications` | Notification inbox | `useNotifications` | **Yes** |
+| `notification-preferences` | Settings notification toggles | `NotificationPreferencesView`, `useNotificationPreferences` | **Yes** |
 | `business-guide` | KB + static FOP/tax/KVED | hooks, `business-guide.service` | **Partial** |
 | `business-guide/checker` | FOP eligibility wizard | `eligibility-engine`, `useEligibilityChecker` | **Partial** (client-only) |
 | `auth` | Login/register forms | `LoginForm`, `RegisterForm` | **Yes** |
-| `settings` | Preferences UI | `SettingsView` | **Partial** |
+| `settings` | Preferences UI | `SettingsView` (General, Profile, Security, Notifications, Appearance) | **Yes** |
 | `integrations` | Bank integrations UI | mock data | **Partial** |
 
 ---
@@ -367,6 +373,7 @@ flowchart TB
 | `reports.service` | `features/reports/services/reports.service.ts` | `/api/reports` | **Yes** |
 | `task.service` | `features/tasks/services/task.service.ts` | `/api/tasks` | **Yes** |
 | `notification.service` | `features/notifications/services/notification.service.ts` | `/api/notifications` | **Yes** |
+| `notification-preferences.service` | `features/notification-preferences/services/notification-preferences.service.ts` | `/api/settings/notifications` | **Yes** |
 | `knowledge.service` | `features/business-guide/services/knowledge.service.ts` | `/api/business-guide` | **Yes** |
 | `business-guide.service` | `features/business-guide/services/business-guide.service.ts` | — (local mock) | **Partial** |
 | `tax-profile.service` | `src/services/tax-profile.service.ts` | — (mock-data) | **Partial** |

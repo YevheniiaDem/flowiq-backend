@@ -13,6 +13,7 @@ import com.flowiq.forecasts.provider.RuleBasedForecastProvider;
 import com.flowiq.repository.TransactionRepository;
 import com.flowiq.repository.UserRepository;
 import com.flowiq.security.UserPrincipal;
+import com.flowiq.profile.service.FopProfileService;
 import com.flowiq.service.TransactionSeedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,7 @@ public class ForecastService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final TransactionSeedService transactionSeedService;
+    private final FopProfileService fopProfileService;
     private final ForecastEngine forecastEngine;
     private final RuleBasedForecastProvider ruleBasedProvider;
 
@@ -273,7 +275,7 @@ public class ForecastService {
 
         LocalDate yearStart = LocalDate.of(LocalDate.now().getYear(), 1, 1);
         BigDecimal ytdRevenue = sumRange(user.getId(), Transaction.Type.REVENUE, yearStart, LocalDate.now());
-        int fopGroup = resolveFopGroup(ytdRevenue);
+        int fopGroup = fopProfileService.resolveEffectiveFopGroup(user.getId(), ytdRevenue);
 
         return new ForecastData(
                 historical, projected, revenueTrend, expenseTrend, profitTrend, ytdRevenue, fopGroup
@@ -406,11 +408,8 @@ public class ForecastService {
         );
     }
 
-    private int resolveFopGroup(BigDecimal annualIncome) {
-        if (annualIncome.compareTo(INCOME_LIMITS.get(1)) <= 0) return 1;
-        if (annualIncome.compareTo(INCOME_LIMITS.get(2)) <= 0) return 2;
-        if (annualIncome.compareTo(INCOME_LIMITS.get(3)) <= 0) return 3;
-        return 0;
+    private int resolveFopGroup(Long userId, BigDecimal annualIncome) {
+        return fopProfileService.resolveEffectiveFopGroup(userId, annualIncome);
     }
 
     private BigDecimal estimateTaxLoad(BigDecimal income, int fopGroup) {

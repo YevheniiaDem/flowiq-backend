@@ -19,6 +19,9 @@
 |-----------|---------|------|
 | `TransactionSeedService` | Dashboard, Analytics, Forecast, AI Accountant, Chat, Reports, Task | `TransactionRepository` → `Transaction` → `transactions` |
 | `JwtAuthenticationFilter` | All protected `/api/*` | `JwtService` + `CustomUserDetailsService` → `UserRepository` → `users` |
+| `FopProfileService` | Analytics, Forecast, NotificationRuleEngine, TaskRuleEngine | Stored FOP group/tax rate from `fop_profiles` |
+| `NotificationPreferenceService` | `NotificationGeneratorService`, settings API | Per-user `(type, channel)` toggles from `notification_preferences` |
+| `SessionService` | Auth login/refresh/logout, Profile sessions | `user_sessions` refresh-token hashes |
 | `UserRepository` | Nearly all services | Resolve current user from JWT → `User` → `users` |
 
 ---
@@ -27,8 +30,9 @@
 
 ```mermaid
 flowchart TB
-    subgraph HTTP["REST Controllers (13)"]
+    subgraph HTTP["REST Controllers (14)"]
         AUTH[AuthController]
+        PROF[ProfileController]
         DASH[DashboardController]
         TX[TransactionController]
         AN[AnalyticsController]
@@ -163,7 +167,7 @@ flowchart TB
 | `POST /upload` | `ImportService` | `CsvImportStrategyResolver`, `CategorizationEngine` | `ImportJobRepository`, `TransactionRepository` | `ImportJob`, `Transaction` | `import_jobs`, `transactions` |
 | `GET`, `GET /{id}` | `ImportService` | — | `ImportJobRepository`, `UserRepository` | `ImportJob`, `User` | `import_jobs`, `users` |
 
-*Upload side effects:* `NotificationGeneratorService` → `NotificationRepository` → `notifications`; `TaskGeneratorService` → `TaskRepository` → `tasks`.
+*Upload side effects:* `NotificationGeneratorService` (preference-gated) → `NotificationRepository` → `notifications`; `TaskGeneratorService` → `TaskRepository` → `tasks`.
 
 ### ReportsController — `/api/reports`
 
@@ -498,8 +502,41 @@ flowchart LR
 | `ImportJob` | `import_jobs` | `user_id` |
 | `ReportJob` | `report_jobs` | `user_id` |
 | `Notification` | `notifications` | `user_id` |
+| `NotificationPreference` | `notification_preferences` | `user_id` |
 | `Task` | `tasks` | `user_id` |
 | `KnowledgeArticle` | `knowledge_articles` | Global (shared) |
+| `FopProfile` | `fop_profiles` | `user_id` |
+| `UserSession` | `user_sessions` | `user_id` |
+
+---
+
+## Profile (`ProfileController`)
+
+| Endpoint | Controller | Service | Repository | Table |
+|----------|------------|---------|------------|-------|
+| `GET/PUT /api/profile` | `ProfileController` | `ProfileService` | `UserRepository` | `users` |
+| `POST /api/profile/avatar` | `ProfileController` | `ProfileService` → `AvatarStorageService` | `UserRepository` | `users` + filesystem |
+| `GET/PUT /api/profile/fop` | `ProfileController` | `ProfileService` | `FopProfileRepository` | `fop_profiles` |
+| `POST /api/profile/change-password` | `ProfileController` | `ProfileService` | `UserRepository`, `SessionService` | `users`, `user_sessions` |
+| `GET /api/profile/sessions` | `ProfileController` | `ProfileService` → `SessionService` | `UserSessionRepository` | `user_sessions` |
+
+See [PROFILE_ARCHITECTURE.md](PROFILE_ARCHITECTURE.md) for sequence diagrams and audit events.
+
+---
+
+## Notification Preferences (`NotificationPreferenceController`)
+
+| Endpoint | Controller | Service | Repository | Table |
+|----------|------------|---------|------------|-------|
+| `GET /api/settings/notifications` | `NotificationPreferenceController` | `NotificationPreferenceService` | `NotificationPreferenceRepository` | `notification_preferences` |
+| `PUT /api/settings/notifications` | `NotificationPreferenceController` | `NotificationPreferenceService` | `NotificationPreferenceRepository` | `notification_preferences` |
+| `POST /api/settings/notifications/reset` | `NotificationPreferenceController` | `NotificationPreferenceService` | `NotificationPreferenceRepository` | `notification_preferences` |
+
+**Creation gate:** `NotificationGeneratorService.createIfAbsent()` → `NotificationPreferenceService.isInAppEnabled()` — if false, no row in `notifications`.
+
+**Consumers:** `NotificationRuleEngine`, `TaskRuleEngine`, `ImportService`, `ReportsService`, `NotificationScheduler`.
+
+See [NOTIFICATION_ARCHITECTURE.md](NOTIFICATION_ARCHITECTURE.md) for sequence diagrams, ER diagram, and category/key catalog.
 
 ---
 

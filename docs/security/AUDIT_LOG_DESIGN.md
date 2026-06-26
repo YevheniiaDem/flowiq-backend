@@ -280,8 +280,9 @@ public class AuditLog {
     @Column(name = "resource_id")
     private Long resourceId;
 
-    @Column(name = "ip_address", columnDefinition = "inet")
-    private String ipAddress;  // or custom Inet type
+    @JdbcTypeCode(SqlTypes.INET)
+    @Column(name = "ip_address")
+    private String ipAddress;
 
     @Column(name = "user_agent", length = 512)
     private String userAgent;
@@ -322,6 +323,10 @@ public interface AuditService {
 ```
 
 **Implementation notes:**
+
+- `AuditServiceImpl` delegates persistence to `AuditLogPersistence` (`@Transactional(REQUIRES_NEW)`) so audit failures never roll back business transactions.
+- Async path uses `AuditLogAsyncWriter` (`@Async("auditTaskExecutor")`) — separate bean avoids self-invocation skipping `@Async` / `@Transactional`.
+- `AuditLog.ipAddress` maps PostgreSQL `INET` via `@JdbcTypeCode(SqlTypes.INET)` on `String`.
 
 - `@Async` + dedicated `auditTaskExecutor` pool — **must not block** request thread  
 - `@Transactional(propagation = REQUIRES_NEW)` — audit persists even if business tx rolls back (configurable per event)  

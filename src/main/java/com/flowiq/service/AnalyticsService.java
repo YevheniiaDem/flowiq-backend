@@ -46,17 +46,20 @@ public class AnalyticsService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final TransactionSeedService transactionSeedService;
+    private final com.flowiq.profile.service.FopProfileService fopProfileService;
     private final List<AnalyticsInsightProvider> insightProviders;
 
     public AnalyticsService(
             TransactionRepository transactionRepository,
             UserRepository userRepository,
             TransactionSeedService transactionSeedService,
+            com.flowiq.profile.service.FopProfileService fopProfileService,
             @Autowired(required = false) List<AnalyticsInsightProvider> insightProviders
     ) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.transactionSeedService = transactionSeedService;
+        this.fopProfileService = fopProfileService;
         this.insightProviders = insightProviders != null ? insightProviders : List.of();
     }
 
@@ -80,15 +83,19 @@ public class AnalyticsService {
         BigDecimal currentMonthProfit = currentMonthRevenue.subtract(currentMonthExpenses);
         BigDecimal previousMonthProfit = previousMonthRevenue.subtract(previousMonthExpenses);
 
-        int fopGroup = resolveFopGroup(ytdRevenue);
-        BigDecimal currentTaxBurden = estimateTaxLoad(ytdRevenue, fopGroup);
+        int fopGroup = fopProfileService.resolveEffectiveFopGroup(user.getId(), ytdRevenue);
+        BigDecimal currentTaxBurden = estimateTaxLoad(ytdRevenue, fopGroup, user.getId());
         BigDecimal previousTaxBase = sumRange(
                 user.getId(),
                 Transaction.Type.REVENUE,
                 yearStart,
                 previous.atEndOfMonth()
         );
-        BigDecimal previousTaxBurden = estimateTaxLoad(previousTaxBase, resolveFopGroup(previousTaxBase));
+        BigDecimal previousTaxBurden = estimateTaxLoad(
+                previousTaxBase,
+                fopProfileService.resolveEffectiveFopGroup(user.getId(), previousTaxBase),
+                user.getId()
+        );
 
         return AnalyticsOverviewResponse.builder()
                 .revenue(ytdRevenue)
@@ -171,9 +178,9 @@ public class AnalyticsService {
         LocalDate today = LocalDate.now();
         BigDecimal annualIncome = sumRange(user.getId(), Transaction.Type.REVENUE, yearStart, today);
 
-        int fopGroup = resolveFopGroup(annualIncome);
+        int fopGroup = fopProfileService.resolveEffectiveFopGroup(user.getId(), annualIncome);
         BigDecimal incomeLimit = fopGroup > 0
-                ? INCOME_LIMITS.get(fopGroup)
+                ? fopProfileService.incomeLimitForGroup(fopGroup)
                 : INCOME_LIMITS.get(3);
         double usagePercent = incomeLimit.compareTo(BigDecimal.ZERO) == 0
                 ? 0.0
@@ -181,8 +188,8 @@ public class AnalyticsService {
                 .divide(incomeLimit, 2, RoundingMode.HALF_UP)
                 .doubleValue();
 
-        BigDecimal estimatedTax = estimateTaxLoad(annualIncome, fopGroup);
-        BigDecimal taxForecast = forecastAnnualTax(annualIncome, fopGroup, today);
+        BigDecimal estimatedTax = estimateTaxLoad(annualIncome, fopGroup, user.getId());
+        BigDecimal taxForecast = forecastAnnualTax(annualIncome, fopGroup, today, user.getId());
 
         LocalDate nextDeadline = resolveNextTaxDeadline(today);
         int daysUntil = (int) ChronoUnit.DAYS.between(today, nextDeadline);
@@ -234,28 +241,20 @@ public class AnalyticsService {
     }
 
     private int resolveFopGroup(BigDecimal annualIncome) {
-        if (annualIncome.compareTo(INCOME_LIMITS.get(1)) <= 0) {
-            return 1;
-        }
-        if (annualIncome.compareTo(INCOME_LIMITS.get(2)) <= 0) {
-            return 2;
-        }
-        if (annualIncome.compareTo(INCOME_LIMITS.get(3)) <= 0) {
-            return 3;
-        }
-        return 0;
+        return fopProfileService.deriveFopGroupFromIncome(annualIncome);
     }
 
-    private BigDecimal estimateTaxLoad(BigDecimal income, int fopGroup) {
+    private BigDecimal estimateTaxLoad(BigDecimal income, int fopGroup, Long userId) {
         if (income.compareTo(BigDecimal.ZERO) <= 0 || fopGroup == 0) {
             return BigDecimal.ZERO;
         }
-        BigDecimal singleTax = income.multiply(SINGLE_TAX_RATES.get(fopGroup));
+        BigDecimal rate = fopProfileService.resolveEffectiveTaxRate(userId, fopGroup);
+        BigDecimal singleTax = income.multiply(rate);
         BigDecimal esv = ESV_MONTHLY.multiply(new BigDecimal(LocalDate.now().getMonthValue()));
         return singleTax.add(esv).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal forecastAnnualTax(BigDecimal ytdIncome, int fopGroup, LocalDate today) {
+    private BigDecimal forecastAnnualTax(BigDecimal ytdIncome, int fopGroup, LocalDate today, Long userId) {
         if (ytdIncome.compareTo(BigDecimal.ZERO) <= 0 || fopGroup == 0) {
             return BigDecimal.ZERO;
         }
@@ -264,7 +263,8 @@ public class AnalyticsService {
         BigDecimal projectedIncome = ytdIncome
                 .multiply(new BigDecimal(daysInYear))
                 .divide(new BigDecimal(dayOfYear), 2, RoundingMode.HALF_UP);
-        BigDecimal singleTax = projectedIncome.multiply(SINGLE_TAX_RATES.get(fopGroup));
+        BigDecimal rate = fopProfileService.resolveEffectiveTaxRate(userId, fopGroup);
+        BigDecimal singleTax = projectedIncome.multiply(rate);
         BigDecimal esv = ESV_MONTHLY.multiply(new BigDecimal("12"));
         return singleTax.add(esv).setScale(2, RoundingMode.HALF_UP);
     }

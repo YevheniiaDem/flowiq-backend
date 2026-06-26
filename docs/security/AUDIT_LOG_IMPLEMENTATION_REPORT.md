@@ -35,6 +35,8 @@ Production-ready append-only audit logging is implemented with:
 | `com.flowiq.audit.dto.AuditEventRequest` | Write DTO |
 | `com.flowiq.audit.service.AuditService` | Public API |
 | `com.flowiq.audit.service.AuditServiceImpl` | Async + sanitizer + enrich |
+| `com.flowiq.audit.service.AuditLogPersistence` | `REQUIRES_NEW` isolated writes |
+| `com.flowiq.audit.service.AuditLogAsyncWriter` | `@Async` entry point for audit queue |
 | `com.flowiq.audit.aspect.Auditable` | Method annotation |
 | `com.flowiq.audit.aspect.AuditAspect` | AOP around advice |
 | `com.flowiq.audit.support.AuditMetadataSanitizer` | Redaction |
