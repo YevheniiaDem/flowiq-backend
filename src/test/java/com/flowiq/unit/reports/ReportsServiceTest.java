@@ -191,7 +191,7 @@ class ReportsServiceTest {
         ReportJobResponse response = reportsService.generate(request);
 
         assertThat(response.getStatus()).isEqualTo("COMPLETED");
-        verify(notificationGeneratorService).notifyReportCompleted(eq(USER_ID), eq(10L), eq("report.pdf"));
+        verify(notificationGeneratorService).notifyReportCompleted(eq(USER_ID), eq(10L), eq("report.pdf"), eq("PDF"));
         verify(taskGeneratorService).createReportReviewTask(eq(USER_ID), eq(10L), eq("report.pdf"));
     }
 

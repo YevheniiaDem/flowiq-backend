@@ -4,8 +4,10 @@ import com.flowiq.entity.Transaction;
 import com.flowiq.entity.User;
 import com.flowiq.notifications.entity.NotificationSeverity;
 import com.flowiq.notifications.entity.NotificationType;
+import com.flowiq.notifications.preferences.NotificationPreferenceKey;
 import com.flowiq.notifications.service.NotificationGeneratorService;
 import com.flowiq.notifications.service.NotificationRuleEngine;
+import com.flowiq.profile.service.FopProfileService;
 import com.flowiq.repository.TransactionRepository;
 import com.flowiq.tasks.service.TaskGeneratorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +23,7 @@ import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -39,6 +42,8 @@ class NotificationRuleEngineTest {
     private TaskGeneratorService taskGenerator;
     @Mock
     private TransactionRepository transactionRepository;
+    @Mock
+    private FopProfileService fopProfileService;
 
     @InjectMocks
     private NotificationRuleEngine engine;
@@ -52,6 +57,24 @@ class NotificationRuleEngineTest {
         when(transactionRepository.sumByUserAndTypeAndDateRange(
                 anyLong(), any(Transaction.Type.class), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(BigDecimal.ZERO);
+        when(fopProfileService.resolveEffectiveFopGroup(eq(USER_ID), any(BigDecimal.class)))
+                .thenAnswer(invocation -> deriveFopGroup(invocation.getArgument(1)));
+    }
+
+    private static int deriveFopGroup(BigDecimal annualIncome) {
+        if (annualIncome == null || annualIncome.compareTo(BigDecimal.ZERO) <= 0) {
+            return 2;
+        }
+        if (annualIncome.compareTo(new BigDecimal("1672000")) <= 0) {
+            return 1;
+        }
+        if (annualIncome.compareTo(new BigDecimal("5328000")) <= 0) {
+            return 2;
+        }
+        if (annualIncome.compareTo(new BigDecimal("7818000")) <= 0) {
+            return 3;
+        }
+        return 0;
     }
 
     private void stubYtdRevenue(BigDecimal amount) {
@@ -82,8 +105,9 @@ class NotificationRuleEngineTest {
                     contains("30"),
                     eq(NotificationType.TAX),
                     eq(NotificationSeverity.INFO),
-                    eq("/ai-accountant"),
-                    any()
+                eq("/ai-accountant"),
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
             );
             verify(taskGenerator).createFromNotification(
                     eq(USER_ID),
@@ -112,7 +136,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FOP_LIMIT),
                 eq(NotificationSeverity.WARNING),
                 eq("/business-guide"),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -131,7 +156,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FOP_LIMIT),
                 eq(NotificationSeverity.CRITICAL),
                 eq("/business-guide"),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -150,7 +176,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FOP_LIMIT),
                 eq(NotificationSeverity.WARNING),
                 eq("/business-guide"),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -169,7 +196,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FOP_LIMIT),
                 any(),
                 anyString(),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -203,7 +231,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FINANCIAL),
                 eq(NotificationSeverity.WARNING),
                 eq("/analytics"),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
         verify(taskGenerator).createFromNotification(
                 eq(USER_ID), eq("expense-spike-" + current), anyString(), anyString(),
@@ -241,7 +270,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FINANCIAL),
                 eq(NotificationSeverity.WARNING),
                 eq("/analytics"),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -275,7 +305,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FINANCIAL),
                 eq(NotificationSeverity.SUCCESS),
                 eq("/analytics"),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -294,7 +325,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FINANCIAL),
                 any(),
                 anyString(),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 
@@ -313,7 +345,8 @@ class NotificationRuleEngineTest {
                 eq(NotificationType.FOP_LIMIT),
                 any(),
                 anyString(),
-                any()
+                any(LocalDateTime.class),
+                any(NotificationPreferenceKey.class)
         );
     }
 }

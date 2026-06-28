@@ -8,6 +8,7 @@ import com.flowiq.forecasts.dto.*;
 import com.flowiq.forecasts.engine.ForecastEngine;
 import com.flowiq.forecasts.provider.RuleBasedForecastProvider;
 import com.flowiq.forecasts.service.ForecastService;
+import com.flowiq.profile.service.FopProfileService;
 import com.flowiq.repository.TransactionRepository;
 import com.flowiq.repository.UserRepository;
 import com.flowiq.service.TransactionSeedService;
@@ -46,6 +47,8 @@ class ForecastServiceTest {
     private UserRepository userRepository;
     @Mock
     private TransactionSeedService transactionSeedService;
+    @Mock
+    private FopProfileService fopProfileService;
 
     private final ForecastEngine forecastEngine = new ForecastEngine();
     private final RuleBasedForecastProvider ruleBasedProvider = new RuleBasedForecastProvider();
@@ -60,6 +63,7 @@ class ForecastServiceTest {
                 transactionRepository,
                 userRepository,
                 transactionSeedService,
+                fopProfileService,
                 forecastEngine,
                 ruleBasedProvider
         );
@@ -67,6 +71,8 @@ class ForecastServiceTest {
         user = SecurityTestSupport.testUser(USER_ID, EMAIL);
         SecurityTestSupport.authenticate(user);
         when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        when(fopProfileService.resolveEffectiveFopGroup(eq(USER_ID), any(BigDecimal.class)))
+                .thenAnswer(invocation -> deriveFopGroup(invocation.getArgument(1)));
         stubMonthlyTransactions(new BigDecimal("10000"), new BigDecimal("4000"));
         stubYtdRevenue(new BigDecimal("200000"));
     }
@@ -75,6 +81,22 @@ class ForecastServiceTest {
     void tearDown() {
         SecurityTestSupport.clearSecurityContext();
         AppPreferences.clear();
+    }
+
+    private static int deriveFopGroup(BigDecimal annualIncome) {
+        if (annualIncome == null || annualIncome.compareTo(BigDecimal.ZERO) <= 0) {
+            return 2;
+        }
+        if (annualIncome.compareTo(new BigDecimal("1672000")) <= 0) {
+            return 1;
+        }
+        if (annualIncome.compareTo(new BigDecimal("5328000")) <= 0) {
+            return 2;
+        }
+        if (annualIncome.compareTo(new BigDecimal("7818000")) <= 0) {
+            return 3;
+        }
+        return 0;
     }
 
     @Test

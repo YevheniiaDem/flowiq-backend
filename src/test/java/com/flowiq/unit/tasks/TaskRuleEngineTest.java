@@ -56,7 +56,24 @@ class TaskRuleEngineTest {
         when(transactionRepository.sumByUserAndTypeAndDateRange(
                 anyLong(), any(Transaction.Type.class), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(BigDecimal.ZERO);
-        when(fopProfileService.resolveEffectiveFopGroup(anyLong(), any(BigDecimal.class))).thenReturn(2);
+        when(fopProfileService.resolveEffectiveFopGroup(anyLong(), any(BigDecimal.class)))
+                .thenAnswer(invocation -> deriveFopGroup(invocation.getArgument(1)));
+    }
+
+    private static int deriveFopGroup(BigDecimal annualIncome) {
+        if (annualIncome == null || annualIncome.compareTo(BigDecimal.ZERO) <= 0) {
+            return 2;
+        }
+        if (annualIncome.compareTo(new BigDecimal("1672000")) <= 0) {
+            return 1;
+        }
+        if (annualIncome.compareTo(new BigDecimal("5328000")) <= 0) {
+            return 2;
+        }
+        if (annualIncome.compareTo(new BigDecimal("7818000")) <= 0) {
+            return 3;
+        }
+        return 0;
     }
 
     @Test

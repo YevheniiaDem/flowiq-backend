@@ -7,7 +7,6 @@ import com.flowiq.repository.UserRepository;
 import com.flowiq.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -41,13 +40,13 @@ public class FopProfileService {
         return fopProfileRepository.findByUser_Id(userId);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public FopProfile getOrCreateForUser(User user) {
         Long userId = user.getId();
         return fopProfileRepository.findByUser_Id(userId)
                 .orElseGet(() -> {
                     FopProfile profile = new FopProfile();
-                    profile.setUser(userRepository.getReferenceById(userId));
+                    profile.setUser(user);
                     profile.setFopGroup(2);
                     profile.setTaxSystem(TaxSystem.SINGLE_TAX);
                     profile.setTaxRate(DEFAULT_SINGLE_TAX_RATES.get(2));

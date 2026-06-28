@@ -33,6 +33,7 @@ jobs:
       - name: Run Maven verify
         run: ./mvnw clean verify -B
         env:
+          # application-test.properties disables compose; explicit for CI clarity
           SPRING_DOCKER_COMPOSE_ENABLED: "false"
 
       - name: Publish test results
@@ -40,8 +41,8 @@ jobs:
         if: always()
         with:
           files: target/surefire-reports/**/*.xml
-          check_name: Backend Unit Tests
-          comment_title: Backend Unit Test Results
+          check_name: Backend Tests
+          comment_title: Backend Test Results
 
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v4
