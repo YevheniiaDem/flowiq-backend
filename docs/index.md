@@ -1,7 +1,11 @@
 # Documentation Index
 
-## Product
+## Developer onboarding
 
+- **[Developer Handbook](DEVELOPER_HANDBOOK.md)** — complete contributor guide
+- [Contributing](../CONTRIBUTING.md)
+
+- [SRS](product/SRS.md)
 - [Vision](product/vision.md)
 - [Roadmap](product/roadmap.md)
 - [Bank Integrations Roadmap](roadmap/BANK_INTEGRATIONS_ROADMAP.md)
@@ -10,9 +14,13 @@
 
 ## Architecture
 
+- **[Architecture Index](architecture/README.md)** — master map (C4, flows, CI/CD, tests)
 - [System Overview](architecture/system-overview.md)
-- [C4 Context](architecture/c4/c4-context.md)
-- [C4 Containers](architecture/c4/c4-container.md)
+- [C4 Context](architecture/c4/c4-context.md) · [Containers](architecture/c4/c4-container.md) · [Components](architecture/c4/c4-component.md)
+- [Module Dependencies](architecture/module-dependencies.md)
+- [Database ER Diagram](architecture/database-er-diagram.md)
+- **Process flows:** [Auth](architecture/flows/authentication-flow.md) · [Notifications](architecture/flows/notification-flow.md) · [Import](architecture/flows/import-flow.md) · [Forecast](architecture/flows/forecast-flow.md) · [AI](architecture/flows/ai-flow.md) · [Reports](architecture/flows/reporting-flow.md)
+- [Deployment](architecture/deployment-architecture.md) · [CI/CD](architecture/cicd-architecture.md) · [Test Architecture](architecture/test-architecture.md) · [Automation](architecture/automation-architecture.md)
 - [Data Sources](architecture/data-sources.md)
 - [AI Quality Factory](architecture/ai-quality-factory.md)
 - [AI Agents Architecture](architecture/ai-agents-architecture.md)
@@ -100,6 +108,7 @@
 
 ## Security
 
+- **[Security Audit](security/SECURITY_AUDIT.md)** — production security audit (2026-06-28)
 - [Authentication](security/authentication.md)
 - [Authorization](security/authorization.md)
 - [JWT Flow](security/jwt-flow.md)

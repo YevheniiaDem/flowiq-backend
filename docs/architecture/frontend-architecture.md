@@ -1,7 +1,10 @@
 # Frontend Architecture
 
+**As-built:** 2026-06-28  
 **Repository:** `flowiq-frontend`  
 **Framework:** Next.js 16 App Router, React 19, TypeScript
+
+> Auth flow: [flows/authentication-flow.md](flows/authentication-flow.md) · C4: [c4/c4-component.md](c4/c4-component.md)
 
 ## Structure
 
@@ -57,7 +60,7 @@ flowchart TB
 `src/services/api.ts`:
 - Base URL: `NEXT_PUBLIC_API_URL` || `http://localhost:8080/api`
 - Injects `Authorization: Bearer`, `X-App-Language`, `X-App-Currency`
-- 401 clears token (except auth endpoints)
+- 401 → attempts refresh via `tokenRefresh.ts` → `POST /api/auth/refresh` → retry once
 
 ## Styling Conventions
 
@@ -90,3 +93,4 @@ Custom implementation (no next-intl):
 - [Components](../frontend/components.md)
 - [State Management](../frontend/state-management.md)
 - [Hooks](../frontend/hooks.md)
+- [Test Architecture](test-architecture.md) — Vitest local, not in CI

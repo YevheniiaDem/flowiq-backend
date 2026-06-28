@@ -1,5 +1,7 @@
 # Notification Preferences Architecture
 
+> **Full notification lifecycle:** [flows/notification-flow.md](flows/notification-flow.md)
+
 FlowIQ notification preferences let each user control **which** notification types are delivered and **through which channels**. Preferences are stored per user in PostgreSQL and enforced at notification creation time — disabled types are never persisted.
 
 ## Scope

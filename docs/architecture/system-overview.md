@@ -1,40 +1,45 @@
 # System Overview
 
+**As-built:** 2026-06-28  
+**Index:** [README.md](README.md) — full architecture documentation map
+
 ## High-Level Architecture
+
+Three repositories form the FlowIQ platform:
 
 ```mermaid
 flowchart TB
-    subgraph Client["Browser (Next.js 16)"]
+    subgraph Client["flowiq-frontend — Next.js 16"]
         UI[React App Router]
         CTX[PreferencesContext]
         API_CLIENT[Axios apiClient]
     end
 
-    subgraph Backend["Spring Boot 3.5 API"]
+    subgraph Backend["flowiq-backend — Spring Boot 3.5"]
         SEC[Security / JWT Filter]
-        CTRL[REST Controllers]
-        SVC[Services]
-        ENG[Rule Engines]
+        CTRL[15 REST Controllers]
+        SVC[Services + Rule Engines]
         PROV[AI Provider Interfaces]
         REPO[JPA Repositories]
-        SCH[Schedulers]
+        SCH[Schedulers 07:30 / 08:00]
+        AUD[Audit Async Writer]
     end
 
     subgraph Data["PostgreSQL 15"]
-        DB[(flowiq database)]
-        FLY[Flyway Migrations]
+        DB[(13 tables Flyway V1–V8)]
+    end
+
+    subgraph QA["flowiq-automation"]
+        TEST[TestNG + Rest Assured + Playwright]
     end
 
     UI --> API_CLIENT
     API_CLIENT -->|HTTPS + Bearer JWT| SEC
-    SEC --> CTRL
-    CTRL --> SVC
-    SVC --> ENG
-    SVC --> PROV
-    SVC --> REPO
+    SEC --> CTRL --> SVC
+    SVC --> ENG[Rule Engines] & PROV & REPO & AUD
     SCH --> SVC
     REPO --> DB
-    FLY --> DB
+    TEST --> Backend & Client
 ```
 
 ## Request Flow
@@ -67,7 +72,8 @@ sequenceDiagram
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind 4, shadcn/ui, Recharts, Axios |
 | Backend | Spring Boot 3.5.14, Java 17, Spring Security, Spring Data JPA |
 | Database | PostgreSQL 15 (Docker Compose) |
-| Migrations | Flyway V1–V5 |
+| Migrations | Flyway V1–V8 |
+| Automation | TestNG, Rest Assured, Playwright Java (`flowiq-automation`) |
 | API Docs | springdoc-openapi 2.8 |
 | PDF Reports | OpenPDF |
 | Excel Reports | Apache POI |
@@ -91,24 +97,39 @@ sequenceDiagram
 
 ## Deployment Topology (Current)
 
+See [deployment-architecture.md](deployment-architecture.md) for full diagram.
+
 ```mermaid
 flowchart LR
-    DEV[Developer Machine]
-    FE[next dev :3000]
-    BE[spring-boot :8080]
+    DEV[Developer / CI]
+    FE[next dev or Vercel :3000]
+    BE[spring-boot or container :8080]
     PG[(postgres :5432)]
+    AUTO[flowiq-automation CI]
 
-    DEV --> FE
-    FE -->|REST| BE
+    DEV --> FE & BE & AUTO
+    FE -->|REST /api| BE
     BE --> PG
+    AUTO --> FE & BE & PG
 ```
 
-Production target: frontend on Vercel (`https://flowiq.vercel.app` in CORS); backend via `Dockerfile` (manual build/deploy) or managed JVM host — **CD not automated**. See [Docker](../deployment/docker.md) and [CI/CD](../deployment/ci-cd.md).
+Production: frontend on Vercel (`https://flowiq.vercel.app`); backend JAR/Docker — **CD not automated**. See [cicd-architecture.md](cicd-architecture.md).
+
+## Process Flows
+
+| Flow | Document |
+|------|----------|
+| Authentication | [flows/authentication-flow.md](flows/authentication-flow.md) |
+| Notifications | [flows/notification-flow.md](flows/notification-flow.md) |
+| CSV import | [flows/import-flow.md](flows/import-flow.md) |
+| Forecasts | [flows/forecast-flow.md](flows/forecast-flow.md) |
+| AI / rules | [flows/ai-flow.md](flows/ai-flow.md) |
+| Reports | [flows/reporting-flow.md](flows/reporting-flow.md) |
 
 ## Cross-References
 
-- [Backend Architecture](backend-architecture.md)
-- [Frontend Architecture](frontend-architecture.md)
-- [Database Architecture](database-architecture.md)
-- [AI Architecture](ai-architecture.md)
-- [Local Setup](../deployment/local-setup.md)
+- [C4 Context](c4/c4-context.md) · [C4 Container](c4/c4-container.md) · [C4 Component](c4/c4-component.md)
+- [Module Dependencies](module-dependencies.md)
+- [Backend](backend-architecture.md) · [Frontend](frontend-architecture.md) · [Automation](automation-architecture.md)
+- [Database ER](database-er-diagram.md) · [Test Architecture](test-architecture.md)
+- [SRS](../product/SRS.md)

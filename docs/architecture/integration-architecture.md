@@ -1,6 +1,6 @@
 # Integration Architecture
 
-## Current Data Source: Bank Statement Import
+> **Import flow detail:** [flows/import-flow.md](flows/import-flow.md)
 
 Flowiq does **not** connect to bank APIs. The only way to load bank transactions is **CSV/XLSX import** via the Imports module.
 
@@ -91,6 +91,7 @@ Hidden route: `/coming-soon/integrations` — not listed in sidebar.
 
 ## Related Documents
 
+- [flows/import-flow.md](flows/import-flow.md)
 - [Bank Integrations Roadmap](../roadmap/BANK_INTEGRATIONS_ROADMAP.md)
 - [Transactions Module](../modules/transactions.md)
 - [Reports Module](../modules/reports.md)

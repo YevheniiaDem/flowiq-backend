@@ -64,9 +64,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8080/api
 |-------|-----|
 | Port 8080 in use | Stop other Java process |
 | Bean `taskScheduler` conflict | Use `DailyTaskScheduler` (fixed) |
-| Flyway validation error | Ensure migrations V1–V5 applied |
+| Flyway validation error | Ensure migrations V1–V8 applied |
 | CORS error | Frontend must be on :3000 or :3001 |
 
 ## Related
 
+- [Developer Handbook](../DEVELOPER_HANDBOOK.md)
 - [Docker](docker.md)

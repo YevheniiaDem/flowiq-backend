@@ -62,7 +62,13 @@ public class AvatarStorageService {
         }
     }
 
+    private static final java.util.regex.Pattern SAFE_FILENAME =
+            java.util.regex.Pattern.compile("^[0-9]+_[0-9a-fA-F-]+\\.(jpg|png|webp|gif)$");
+
     public Path resolveAvatarPath(String filename) {
+        if (filename == null || !SAFE_FILENAME.matcher(filename).matches()) {
+            throw new BadRequestException("Invalid avatar filename");
+        }
         Path resolved = avatarDirectory.resolve(filename).normalize();
         if (!resolved.startsWith(avatarDirectory)) {
             throw new BadRequestException("Invalid avatar filename");

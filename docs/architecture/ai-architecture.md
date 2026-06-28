@@ -2,7 +2,7 @@
 
 FlowIQ uses a **pluggable provider pattern** for AI capabilities. Production behavior today is **deterministic and rule-based** — suitable for auditing and offline operation. External LLM backends plug in as Spring beans.
 
-**Audit reference:** [AI Documentation Audit Report](AI_DOCUMENTATION_AUDIT_REPORT.md) (2026-06-23).
+> **End-to-end flows:** [flows/ai-flow.md](flows/ai-flow.md) · [flows/forecast-flow.md](flows/forecast-flow.md)
 
 ## Provider Interfaces
 
@@ -97,37 +97,11 @@ First non-`DatabaseKnowledgeProvider` bean returns `assistSearch()`; otherwise `
 
 ## AI Accountant Flow
 
-```mermaid
-sequenceDiagram
-    participant UI as AIAccountantView
-    participant API as AIAccountantController
-    participant SVC as AIAccountantService
-    participant ENG as AIRecommendationEngine
-    participant AN as AnalyticsService
-    participant TR as TransactionRepository
-
-    UI->>API: GET /recommendations
-    API->>SVC: getRecommendations()
-    SVC->>TR: buildSnapshot() via repositories
-    SVC->>AN: getFopInsights() (snapshot)
-    SVC->>ENG: generate(snapshot)
-    ENG-->>SVC: Rule-based list
-    opt AIInsightProvider beans
-        SVC->>SVC: merge provider.getRecommendations()
-    end
-    SVC-->>UI: AIRecommendationResponse[]
-```
-
-Chat: `POST /api/ai-accountant/chat` tries `AIInsightProvider.answerChat()` first, then `generateChatReply()` templates.
-
-Frontend: `flowiq-frontend/src/features/ai-accountant/services/aiAccountantService.ts`.
-
-## Design Rationale
-
-See [ADR-001: Pluggable AI Providers](adr/001-pluggable-ai-providers.md).
+See [flows/ai-flow.md](flows/ai-flow.md) for sequence diagrams (recommendations, chat, dashboard, categorization, knowledge).
 
 ## Related Documents
 
+- [flows/ai-flow.md](flows/ai-flow.md)
 - [Providers](../ai/providers.md)
 - [Forecast Engine](../ai/forecast-engine.md)
 - [Knowledge Search](../ai/knowledge-search.md)

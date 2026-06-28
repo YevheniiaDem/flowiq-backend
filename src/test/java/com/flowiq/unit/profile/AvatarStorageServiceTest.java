@@ -64,12 +64,21 @@ class AvatarStorageServiceTest {
     @Test
     @DisplayName("resolveAvatarPath returns stored file path")
     void resolveAvatarPath_success() throws Exception {
-        Path avatar = tempDir.resolve("1_test.png");
+        String filename = "1_a1b2c3d4-e5f6-7890-abcd-ef1234567890.png";
+        Path avatar = tempDir.resolve(filename);
         Files.write(avatar, new byte[]{1});
 
-        Path resolved = avatarStorageService.resolveAvatarPath("1_test.png");
+        Path resolved = avatarStorageService.resolveAvatarPath(filename);
 
         assertThat(resolved).isEqualTo(avatar.normalize());
+    }
+
+    @Test
+    @DisplayName("resolveAvatarPath rejects invalid filename pattern")
+    void resolveAvatarPath_invalidPattern() {
+        assertThatThrownBy(() -> avatarStorageService.resolveAvatarPath("1_test.png"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Invalid avatar filename");
     }
 
     @Test
@@ -82,7 +91,7 @@ class AvatarStorageServiceTest {
     @Test
     @DisplayName("resolveAvatarPath rejects missing file")
     void resolveAvatarPath_notFound() {
-        assertThatThrownBy(() -> avatarStorageService.resolveAvatarPath("missing.png"))
+        assertThatThrownBy(() -> avatarStorageService.resolveAvatarPath("1_a1b2c3d4-e5f6-7890-abcd-ef1234567890.png"))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("not found");
     }

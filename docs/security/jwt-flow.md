@@ -1,23 +1,31 @@
 # JWT Flow
 
+> **Canonical documentation:** [architecture/flows/authentication-flow.md](../architecture/flows/authentication-flow.md)
+
+Quick reference for JWT access + refresh token flow.
+
 ```mermaid
 sequenceDiagram
     participant C as Client
     participant A as AuthController
     participant J as JwtService
+    participant SS as SessionService
     participant F as JwtAuthenticationFilter
     participant API as Protected Controller
 
     C->>A: POST /auth/login
-    A->>J: generateAccessToken(user)
-    A->>J: generateRefreshToken(user)
+    A->>J: generateAccessToken + generateRefreshToken
+    A->>SS: createSession (hashed refresh)
     A-->>C: token + refreshToken
 
-    C->>F: GET /api/... Authorization Bearer
-    F->>J: extractUsername + isTokenValid
-    F->>F: isAccessToken (reject refresh)
+    C->>F: GET /api/... Authorization Bearer access
+    F->>J: validate + isAccessToken
     F->>API: SecurityContext set
     API-->>C: 200 Response
+
+    C->>A: POST /auth/refresh { refreshToken }
+    A->>SS: validate + rotate session
+    A-->>C: new token + refreshToken
 ```
 
 ## Token Structure
@@ -46,10 +54,8 @@ jwt.refresh-token-expiration=604800000
 
 **Production:** Rotate secret via secrets manager; shorten access token TTL.
 
-## Refresh Gap
-
-Refresh tokens issued but **no `/auth/refresh` endpoint**. Frontend `refreshToken()` throws not implemented.
-
 ## Related
 
-- [Authentication](authentication.md)
+- [Authentication Flow](../architecture/flows/authentication-flow.md)
+- [Authentication](../security/authentication.md)
+- [ADR-006](../architecture/adr/006-jwt-authentication-strategy.md)

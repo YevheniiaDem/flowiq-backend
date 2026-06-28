@@ -1,8 +1,7 @@
 # C4 Model — Level 1: System Context
 
-**As-built:** 2026-06-17  
-**Scope:** FlowIQ platform (backend + frontend)  
-**Source of truth:** `flowiq-backend`, `flowiq-frontend` repositories
+**As-built:** 2026-06-28  
+**Scope:** FlowIQ platform (backend + frontend + automation)
 
 ## Purpose
 
@@ -26,10 +25,13 @@ C4Context
     
     System_Ext(ai, "AI Providers", "Planned — OpenAI / Claude / Gemini via pluggable provider interfaces. No LLM implementation in production code today")
 
+    System_Ext(automation, "flowiq-automation", "CI test harness: API, UI, contract, E2E")
+
     Rel(user, flowiq, "Uses via browser", "HTTPS")
-    Rel(flowiq, postgres, "Reads/writes", "JDBC / Flyway migrations")
+    Rel(flowiq, postgres, "Reads/writes", "JDBC / Flyway migrations V1–V8")
     Rel(user, csv, "Uploads bank exports")
     Rel(csv, flowiq, "Parsed on upload", "POST /api/imports/upload")
+    Rel(automation, flowiq, "Tests", "Rest Assured + Playwright")
     Rel(flowiq, banks, "Future sync", "Not connected")
     Rel(flowiq, ai, "Future insights/chat/categorization", "Provider interfaces only — no HTTP client")
 ```
@@ -44,7 +46,7 @@ C4Context
 
 | System | Status | Interaction |
 |--------|--------|-------------|
-| **PostgreSQL 15** | **Active** | All persistent data. Flyway migrations V1–V5. Hibernate `ddl-auto=validate`. |
+| **PostgreSQL 15** | **Active** | All persistent data. Flyway migrations V1–V8. Hibernate `ddl-auto=validate`. |
 | **CSV Imports** | **Active** | Real user data path. `ImportService` + `MonobankCsvStrategy`, `PrivatBankCsvStrategy`, `UniversalCsvStrategy`. Max file 10 MB. |
 | **Bank Integrations** | **Planned** | No `IntegrationController`, no bank API clients. UI hidden behind coming-soon route. See [Bank Integrations Roadmap](../../roadmap/BANK_INTEGRATIONS_ROADMAP.md). |
 | **AI Providers** | **Planned** | Five provider interfaces (`AIInsightProvider`, `ForecastProvider`, `KnowledgeProvider`, `AnalyticsInsightProvider`, `CategorizationProvider`). Production behavior is **rule-based** only. See [ADR-001](../adr/001-pluggable-ai-providers.md). |
@@ -57,10 +59,13 @@ C4Context
 
 ## Authentication Context
 
-Users authenticate with **JWT** (access + refresh tokens). Frontend stores token and sends `Authorization: Bearer` on API calls. CORS allows `localhost:3000` and `https://flowiq.vercel.app`.
+Users authenticate with **JWT** (access + refresh tokens). Refresh via `POST /api/auth/refresh` with session rotation. Frontend stores tokens in `localStorage` and sends `Authorization: Bearer` on API calls. CORS allows `localhost:3000` and `https://flowiq.vercel.app`.
+
+Detail: [flows/authentication-flow.md](../flows/authentication-flow.md).
 
 ## Related
 
 - [Container Diagram](c4-container.md)
+- [Component Diagram](c4-component.md)
 - [Data Sources](../data-sources.md)
 - [System Overview](../system-overview.md)

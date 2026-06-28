@@ -1,207 +1,69 @@
-# Flowiq Backend - AI Business Operator
+# FlowIQ Backend
 
-Spring Boot backend for FlowIQ — a Ukrainian FOP financial management platform with rule-based AI insights, forecasts, tasks, and notifications.
+Spring Boot API for **FlowIQ** — a Ukrainian FOP financial management platform with rule-based insights, forecasts, tasks, notifications, and CSV bank import.
 
-**Status:** MVP functional  
-**Version:** 0.0.1-SNAPSHOT  
-**Last Updated:** June 17, 2026
+[![Backend CI](https://github.com/YevheniiaDem/flowiq-backend/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/YevheniiaDem/flowiq-backend/actions/workflows/backend-ci.yml)
 
-## Tech Stack
+## Platform repositories
 
-| Layer | Technology |
-|-------|------------|
-| Runtime | Java 17 |
-| Framework | Spring Boot 3.5.14 |
-| Database | PostgreSQL 15 + Flyway migrations |
-| Security | Spring Security + JWT (access + refresh tokens) |
-| ORM | Spring Data JPA (Hibernate, `ddl-auto=validate`) |
-| API docs | springdoc-openapi (Swagger UI) |
-| Build | Maven + JaCoCo |
+| Repository | Role |
+|------------|------|
+| **flowiq-backend** (this repo) | REST API, PostgreSQL, Flyway, schedulers |
+| [flowiq-frontend](https://github.com/YevheniiaDem/flowiq-frontend) | Next.js 16 web application |
+| [flowiq-automation](https://github.com/YevheniiaDem/flowiq-automation) | API/UI/E2E test automation |
 
-## Project Structure
-
-```
-src/main/java/com/flowiq/
-├── config/              # Security, CORS, feature flags
-├── controller/          # REST controllers
-├── service/             # Core business logic
-├── repository/          # JPA repositories
-├── entity/              # JPA entities
-├── dto/                 # Request/response DTOs
-├── security/            # JWT filter, UserPrincipal
-├── forecasts/           # Forecast engine + providers
-├── knowledge/           # Business Guide articles
-├── notifications/       # Notification rules + scheduler
-├── tasks/               # Task rules + scheduler
-├── categorization/      # CSV import categorization
-├── aiaccountant/        # Recommendation engine + provider interface
-└── reports/             # PDF/Excel/CSV generation
-
-src/main/resources/
-├── application.properties
-├── application-docker.properties
-└── db/migration/        # Flyway V1–V5
-```
-
-## Setup & Run
-
-### Prerequisites
-
-- Java 17+
-- Maven 3.8+ (or use `./mvnw`)
-- PostgreSQL 15+ (or Docker Compose)
-
-### Local Development
+## Quick start
 
 ```bash
 git clone https://github.com/YevheniiaDem/flowiq-backend.git
 cd flowiq-backend
-
-# Start PostgreSQL (or let Spring Docker Compose do it)
-docker compose up -d
-
-# Run application (Flyway migrates on startup)
+docker compose up -d          # PostgreSQL (optional — Spring can auto-start)
 ./mvnw spring-boot:run
 ```
 
-Demo user seeded on startup: `demo@flowiq.ai` / `demo123`
+| URL | Endpoint |
+|-----|----------|
+| API | http://localhost:8080/api |
+| Swagger | http://localhost:8080/swagger-ui.html |
+| Health | http://localhost:8080/api/health |
 
-### Docker
+**Demo login (local dev):** `demo@flowiq.ai` / `demo123`
 
-```bash
-docker build -t flowiq-backend .
-docker run -p 8080:8080 flowiq-backend
-```
+Clone [flowiq-frontend](https://github.com/YevheniiaDem/flowiq-frontend) and run `npm run dev` for the UI at http://localhost:3000.
 
-See [docs/deployment/docker.md](docs/deployment/docker.md).
+## Tech stack
 
-## API Endpoints (Implemented)
-
-### Authentication
-- `POST /api/auth/register` — User registration
-- `POST /api/auth/login` — Login, returns JWT
-- `POST /api/auth/logout` — Logout
-- `POST /api/auth/refresh` — Refresh JWT token
-- `GET /api/auth/me` — Current user
-
-### Dashboard
-- `GET /api/dashboard/stats` — Statistics
-- `GET /api/dashboard/health` — Business health score
-- `GET /api/dashboard/insights` — Rule-based insights
-- `GET /api/dashboard/summary` — AI summary
-
-### Transactions
-- `GET /api/transactions` — Paginated list
-- `POST /api/transactions` — Create
-- `PUT /api/transactions/{id}` — Update
-- `DELETE /api/transactions/{id}` — Delete
-
-### Analytics
-- `GET /api/analytics/overview` — Overview metrics
-- `GET /api/analytics/fop-insights` — FOP group, limits, taxes
-
-### Forecasts
-- `GET /api/forecasts/revenue`, `/expenses`, `/profit`, `/taxes`, `/fop-limit`, `/summary`
-
-### AI Accountant
-- `GET /api/ai-accountant/health`, `/recommendations`, `/tax-advisor`, `/forecasts`
-- `POST /api/ai-accountant/chat`
-
-### Imports
-- `POST /api/imports/upload` — Upload bank CSV
-- `GET /api/imports` — List import jobs
-
-### Reports
-- `GET /api/reports` — List report jobs
-- `POST /api/reports/preview`, `/generate`
-- `GET /api/reports/{id}/download`
-
-### Other modules
-- `/api/tasks/*` — Tasks & deadlines
-- `/api/notifications/*` — Notifications
-- `/api/business-guide/*` — Knowledge base
-- `/api/chat/*` — Chat conversations
-
-### Bank Integrations (planned — not implemented)
-
-Feature flag: `flowiq.features.bank-integrations-enabled=false`  
-See [Bank Integrations Roadmap](docs/roadmap/BANK_INTEGRATIONS_ROADMAP.md).
-
-## Security
-
-- **JWT** access token (24h) + refresh token (7d) — implemented
-- BCrypt password hashing
-- CORS: `localhost:3000`, `https://flowiq.vercel.app`
-- Roles: `ADMIN`, `USER`, `VIEWER` (role enforcement partially documented — see `docs/security/`)
-
-## API Documentation
-
-- **Swagger UI:** http://localhost:8080/swagger-ui.html
-- **OpenAPI JSON:** http://localhost:8080/v3/api-docs
-
-## Database
-
-PostgreSQL with Flyway migrations (V1–V5). Hibernate does not auto-modify schema.
-
-**Tables:** `users`, `transactions`, `chat_conversations`, `chat_messages`, `import_jobs`, `report_jobs`, `notifications`, `tasks`, `knowledge_articles`
-
-```bash
-./mvnw flyway:migrate   # requires Flyway Maven plugin or app startup
-```
-
-## Testing
-
-```bash
-./mvnw test                  # 9 test classes, unit + renderer tests
-./mvnw test jacoco:report    # coverage report
-```
-
-See [docs/UNIT-TEST-COVERAGE.md](docs/UNIT-TEST-COVERAGE.md) and [docs/qa/test-strategy.md](docs/qa/test-strategy.md).
-
-**Note:** No integration tests or frontend tests yet. Docker build uses `-DskipTests`.
+Java 17 · Spring Boot 3.5 · PostgreSQL 15 · Flyway · Spring Security (JWT) · springdoc-openapi · JaCoCo
 
 ## Documentation
 
-Full documentation hub: [docs/index.md](docs/index.md)
+| Document | Description |
+|----------|-------------|
+| **[Developer Handbook](docs/DEVELOPER_HANDBOOK.md)** | **Start here** — setup, CI/CD, testing, deployment |
+| [Documentation index](docs/index.md) | Full docs map |
+| [Architecture](docs/architecture/README.md) | C4 diagrams, flows, module map |
+| [SRS](docs/product/SRS.md) | Requirements (as-built) |
+| [Security audit](docs/security/SECURITY_AUDIT.md) | Production security review |
+| [API overview](docs/api/openapi-overview.md) | REST endpoint inventory |
 
-Key architecture docs:
-- [C4 Context](docs/architecture/c4/c4-context.md)
-- [C4 Containers](docs/architecture/c4/c4-container.md)
-- [Data Sources](docs/architecture/data-sources.md)
-- [AI Quality Factory](docs/architecture/ai-quality-factory.md)
-- [Architecture Review Readiness](docs/architecture/ARCHITECTURE_REVIEW_READINESS.md)
+## Development
 
-## Development Status
+```bash
+./mvnw test                  # 446+ tests
+./mvnw test jacoco:report    # Coverage → target/site/jacoco/
+./mvnw clean verify          # CI-equivalent gate
+```
 
-### Implemented
-- PostgreSQL + Flyway migrations (V1–V5)
-- JWT authentication (login, register, refresh, me)
-- REST API for all MVP modules
-- Rule-based AI layer (recommendations, forecasts, insights)
-- CSV import (Monobank, PrivatBank, universal)
-- Report generation (PDF, CSV, Excel)
-- Scheduled tasks (07:30) and notifications (08:00)
-- Unit tests for core engines/services
-- Dockerfiles (backend + frontend repos)
-- GitHub Actions CI (`.github/workflows/backend-ci.yml`)
+Production profile: `SPRING_PROFILES_ACTIVE=prod` with `JWT_SECRET` and database env vars — see [Developer Handbook §14](docs/DEVELOPER_HANDBOOK.md#14-deployment-guide).
 
-### Not implemented
-- Automated CD (deploy on merge)
-- External LLM integration (provider interfaces only)
-- Bank API integrations
-- Email/Telegram notification delivery
-- Audit log
-- Backend user settings persistence
-- Integration / E2E tests
+## Contributing
 
-## Related Projects
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- [Flowiq Frontend](https://github.com/YevheniiaDem/flowiq-frontend) — Next.js 16 frontend
+## License
+
+Proprietary — All Rights Reserved. Contact maintainers regarding open-source licensing.
 
 ## Author
 
 Yevheniia Demchuk
-
-## License
-
-Proprietary — All Rights Reserved

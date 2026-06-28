@@ -1,7 +1,7 @@
 # C4 Model — Level 2: Container Diagram
 
-**As-built:** 2026-06-17  
-**Repositories:** `flowiq-frontend` (Next.js 16), `flowiq-backend` (Spring Boot 3.5)
+**As-built:** 2026-06-28  
+**Repositories:** `flowiq-frontend`, `flowiq-backend`, `flowiq-automation`
 
 ## Container Diagram
 
@@ -14,7 +14,11 @@ C4Container
     Container_Boundary(flowiq, "FlowIQ Platform") {
         Container(frontend, "FlowIQ Frontend", "Next.js 16, React 19, TypeScript", "SPA: dashboard, transactions, imports, analytics, forecasts, reports, AI Accountant, chat, business guide")
         Container(backend, "FlowIQ Backend", "Spring Boot 3.5, Java 17", "REST API, JWT auth, business logic, schedulers, rule engines")
-        ContainerDb(db, "PostgreSQL 15", "Relational DB", "users, transactions, tasks, notifications, knowledge_articles, import_jobs, report_jobs, chat_*")
+        ContainerDb(db, "PostgreSQL 15", "Relational DB", "users, fop_profiles, sessions, transactions, tasks, notifications, knowledge_articles, import/report jobs, audit_log")
+    }
+
+    Container_Boundary(automation, "flowiq-automation") {
+        Container(tests, "Test Harness", "TestNG, Rest Assured, Playwright", "PR validation, nightly regression, contract tests")
     }
 
     Container_Boundary(intelligence, "Intelligence Layer (inside Backend JVM)") {
@@ -37,6 +41,8 @@ C4Container
     Rel(scheduler, db, "Reads transactions, writes tasks/notifications")
     Rel(ai, db, "Reads transactions, knowledge_articles")
     Rel(reporting, db, "Reads transactions, writes report_jobs")
+    Rel(tests, backend, "API/UI tests", "HTTP")
+    Rel(tests, frontend, "E2E", "Browser")
     Rel(backend, banks, "Future", "Not implemented")
     Rel(ai, llm, "Future", "Provider beans — none active")
 ```
@@ -71,8 +77,8 @@ C4Container
 | Attribute | Value |
 |-----------|-------|
 | **Version** | 15 (Alpine in `compose.yaml`) |
-| **Migrations** | Flyway V1–V5 in `src/main/resources/db/migration/` |
-| **Tables** | `users`, `transactions`, `chat_conversations`, `chat_messages`, `import_jobs`, `report_jobs`, `notifications`, `tasks`, `knowledge_articles` |
+| **Migrations** | Flyway V1–V8 in `src/main/resources/db/migration/` |
+| **Tables** | 13 tables — see [database-er-diagram.md](../database-er-diagram.md) |
 
 Local dev: `compose.yaml` or Spring Docker Compose (`spring.docker.compose.enabled=true`).
 
@@ -150,6 +156,8 @@ sequenceDiagram
 ## Related
 
 - [Context Diagram](c4-context.md)
+- [Component Diagram](c4-component.md)
 - [Backend Architecture](../backend-architecture.md)
+- [Automation Architecture](../automation-architecture.md)
 - [Frontend Architecture](../frontend-architecture.md)
 - [Data Sources](../data-sources.md)

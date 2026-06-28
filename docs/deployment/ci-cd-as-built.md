@@ -1,7 +1,9 @@
 # CI/CD — As-Built
 
-**Updated:** 2026-06-22  
-**Scope:** GitHub Actions CI in `flowiq-backend` and `flowiq-frontend` (separate repositories)
+> **Canonical CI/CD architecture:** [architecture/cicd-architecture.md](../architecture/cicd-architecture.md)
+
+**Updated:** 2026-06-28  
+**Scope:** GitHub Actions CI in `flowiq-backend`, `flowiq-frontend`, and `flowiq-automation`
 
 ## Overview
 
@@ -144,12 +146,12 @@ sequenceDiagram
 | Gate | Backend | Frontend | Blocks merge |
 |------|---------|----------|--------------|
 | Compile | ✅ `mvn verify` | ✅ `next build` | Yes |
-| Unit tests | ✅ 95 tests | — | Yes |
+| Unit tests | ✅ 446+ tests | — | Yes |
 | Linter | — | ✅ ESLint | Yes |
 | TypeScript | — | ✅ via `next build` | Yes |
 | JaCoCo coverage | 📊 artifact only | — | No (informational) |
-| Integration tests | ❌ | ❌ | — |
-| E2E (Playwright) | ❌ | ❌ | — |
+| Integration tests | ✅ Testcontainers | ❌ | Yes (backend) |
+| E2E (Playwright) | ❌ in backend CI | ❌ | ✅ nightly (automation) |
 | Smoke checklist | ❌ manual | ❌ manual | — |
 | CVE scan | ❌ | ❌ | — |
 
@@ -171,6 +173,9 @@ See [Production Deployment](production-deployment.md) for target architecture.
 
 ## Related
 
+- [CI/CD Architecture](../architecture/cicd-architecture.md)
+- [Test Architecture](../architecture/test-architecture.md)
+- [Automation Architecture](../architecture/automation-architecture.md)
 - [CI/CD Overview](ci-cd.md)
 - [CI/CD Evolution Plan](CI_CD_EVOLUTION_PLAN.md)
 - [CI Readiness Report](CI_READINESS_REPORT.md)

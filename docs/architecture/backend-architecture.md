@@ -1,8 +1,11 @@
 # Backend Architecture
 
+**As-built:** 2026-06-28  
 **Entry point:** `com.flowiq.FlowiqBackendApplication`  
 **Base API path:** `/api`  
 **Source root:** `src/main/java/com/flowiq/`
+
+> Flow diagrams: [flows/](flows/) · Dependencies: [module-dependencies.md](module-dependencies.md) · C4: [c4/c4-component.md](c4/c4-component.md)
 
 ## Layered Structure
 
@@ -43,6 +46,8 @@ flowchart TB
 | Package | Responsibility |
 |---------|----------------|
 | `controller` | Auth, Health, Transactions, Imports, Dashboard, Analytics, AI Accountant, Chat, Reports |
+| `profile` | Profile, FOP, avatar, sessions, password |
+| `audit` | `@Auditable`, async audit log writer |
 | `service` | Core business services |
 | `entity` | User, Transaction, Chat, ImportJob, ReportJob |
 | `repository` | Spring Data JPA for core entities |
@@ -58,7 +63,7 @@ flowchart TB
 |---------|-------------|-------------|
 | `forecasts` | `ForecastController` | Stateless (reads `TransactionRepository`) |
 | `tasks` | `TaskController` | `tasks` table |
-| `notifications` | `NotificationController` | `notifications` table |
+| `notifications` | `NotificationController`, `NotificationPreferenceController` | `notifications`, `notification_preferences` |
 | `knowledge` | `BusinessGuideController` | `knowledge_articles` table |
 
 ### Supporting
@@ -71,9 +76,16 @@ flowchart TB
 | `importcsv` | Bank CSV parsers |
 | `reports` | PDF (`OpenPdfReportRenderer`), Excel (`PoiReportRenderer`) |
 
-## Controllers (14 total, 70+ endpoints)
+## Controllers (15 total, ~90 endpoints)
 
-See [OpenAPI Overview](../api/openapi-overview.md) for full endpoint list.
+| Controller | Base path |
+|------------|-----------|
+| Auth, Health, Transaction, Import, Dashboard, Analytics | `/api/...` |
+| Forecast, AIAccountant, Chat, Task, Notification, Reports, BusinessGuide | `/api/...` |
+| Profile | `/api/profile` |
+| NotificationPreference | `/api/settings/notifications` |
+
+See [OpenAPI Overview](../api/openapi-overview.md) and [REQUEST_FLOW_MAP.md](REQUEST_FLOW_MAP.md).
 
 ## Services — Key Interactions
 
@@ -127,9 +139,11 @@ flowchart LR
 | `DemoUserSeedService` | `ApplicationRunner` | `demo@flowiq.ai` |
 | `TransactionSeedService` | On empty DB | 6 months demo transactions |
 | Flyway V5 | Migration | 20 knowledge articles |
+| Flyway V6–V8 | Migration | `audit_log`, profile/sessions, notification preferences |
 
 ## Related Documents
 
 - [Frontend Architecture](frontend-architecture.md)
 - [Database Architecture](database-architecture.md)
+- [Database ER Diagram](database-er-diagram.md)
 - Module docs in [modules/](../modules/)

@@ -46,6 +46,6 @@ public class DemoUserSeedService implements ApplicationRunner {
 
         User saved = userRepository.save(user);
         fopProfileService.getOrCreateForUser(saved);
-        log.info("Demo user created: {} / {}", DEMO_EMAIL, DEMO_PASSWORD);
+        log.info("Demo user created: {}", DEMO_EMAIL);
     }
 }
